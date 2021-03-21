@@ -4,8 +4,8 @@ EELAYER END
 $Descr A4 11693 8268
 encoding utf-8
 Sheet 1 1
-Title "Macro-keyboard"
-Date "2021-03-14"
+Title "launchpad"
+Date "2021-03-21"
 Rev "1.0"
 Comp ""
 Comment1 ""
@@ -136,19 +136,19 @@ Text GLabel 3350 3500 2    50   Input ~ 0
 MOSI
 Text GLabel 3350 3600 2    50   Input ~ 0
 MISO
-Text GLabel 3350 4500 2    50   Input ~ 0
-BTN0
-Text GLabel 3350 4600 2    50   Input ~ 0
-BTN1
-Text GLabel 3350 4700 2    50   Input ~ 0
-BTN2
-Text GLabel 3350 4800 2    50   Input ~ 0
-BTN3
-Text GLabel 3350 4900 2    50   Input ~ 0
-BTN4
-Text GLabel 3350 5000 2    50   Input ~ 0
-BTN5
 Text GLabel 3350 5100 2    50   Input ~ 0
+BTN0
+Text GLabel 3350 5200 2    50   Input ~ 0
+BTN1
+Text GLabel 3350 5000 2    50   Input ~ 0
+BTN2
+Text GLabel 3350 4900 2    50   Input ~ 0
+BTN3
+Text GLabel 3350 4700 2    50   Input ~ 0
+BTN4
+Text GLabel 3350 4800 2    50   Input ~ 0
+BTN5
+Text GLabel 3350 4600 2    50   Input ~ 0
 BTN6
 $Comp
 L Device:R_Small R4
@@ -277,7 +277,7 @@ NoConn ~ 3350 4000
 NoConn ~ 3350 4200
 NoConn ~ 3350 4300
 NoConn ~ 3350 5500
-NoConn ~ 3350 5200
+NoConn ~ 3350 4500
 NoConn ~ 3350 5800
 NoConn ~ 3350 5900
 NoConn ~ 3350 6000
@@ -350,18 +350,6 @@ F 3 "~" H 7550 2700 50  0001 C CNN
 	1    0    0    -1  
 $EndComp
 $Comp
-L Device:Ferrite_Bead_Small FB2
-U 1 1 60513CFA
-P 9700 2700
-F 0 "FB2" V 9650 2850 50  0000 C CNN
-F 1 "50 @ 100MHz" V 9750 3000 50  0000 C CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric" V 9630 2700 50  0001 C CNN
-F 3 "~" H 9700 2700 50  0001 C CNN
-F 4 "GZ2012D601TF" V 9700 2700 50  0001 C CNN "LCSC"
-	1    9700 2700
-	0    1    1    0   
-$EndComp
-$Comp
 L Device:R_Small R7
 U 1 1 605178D0
 P 9700 2350
@@ -378,8 +366,6 @@ Wire Wire Line
 	9800 2350 9950 2350
 Wire Wire Line
 	9950 2350 9950 2700
-Wire Wire Line
-	9800 2700 9950 2700
 Connection ~ 9950 2700
 Wire Wire Line
 	9950 2700 9950 2950
@@ -399,8 +385,6 @@ Wire Wire Line
 Connection ~ 9500 2650
 Wire Wire Line
 	9500 2650 9500 2700
-Wire Wire Line
-	9500 2700 9600 2700
 Connection ~ 9500 2700
 Wire Wire Line
 	9500 2700 9500 2750
@@ -434,26 +418,14 @@ F 3 "~" H 9700 1750 50  0001 C CNN
 	-1   0    0    1   
 $EndComp
 $Comp
-L Device:Ferrite_Bead_Small FB1
-U 1 1 6052AB28
-P 10000 1750
-F 0 "FB1" V 9950 1900 50  0000 C CNN
-F 1 "50 @ 100MHz" V 10050 2050 50  0000 C CNN
-F 2 "Capacitor_SMD:C_0805_2012Metric" V 9930 1750 50  0001 C CNN
-F 3 "~" H 10000 1750 50  0001 C CNN
-F 4 "GZ2012D601TF" V 10000 1750 50  0001 C CNN "LCSC"
-	1    10000 1750
-	0    1    1    0   
-$EndComp
-$Comp
 L power:+5V #PWR0111
 U 1 1 6052C012
-P 10250 1500
-F 0 "#PWR0111" H 10250 1350 50  0001 C CNN
-F 1 "+5V" H 10265 1673 50  0000 C CNN
-F 2 "" H 10250 1500 50  0001 C CNN
-F 3 "" H 10250 1500 50  0001 C CNN
-	1    10250 1500
+P 9950 1500
+F 0 "#PWR0111" H 9950 1350 50  0001 C CNN
+F 1 "+5V" H 9965 1673 50  0000 C CNN
+F 2 "" H 9950 1500 50  0001 C CNN
+F 3 "" H 9950 1500 50  0001 C CNN
+	1    9950 1500
 	1    0    0    -1  
 $EndComp
 $Comp
@@ -774,7 +746,7 @@ U 1 1 605FB00D
 P 9400 5000
 F 0 "SW6" V 9446 4952 50  0000 R CNN
 F 1 "CherryMX" V 9355 4952 50  0000 R CNN
-F 2 "Button_Switch_Keyboard:SW_Cherry_MX_2.00u_Vertical_PCB" H 9400 5025 50  0001 C CNN
+F 2 "Custom:SW_Cherry_MX_2.00u_Vertical_PCB_unsupported" H 9400 5025 50  0001 C CNN
 F 3 "" H 9400 5025 50  0001 C CNN
 	1    9400 5000
 	0    -1   -1   0   
@@ -919,11 +891,9 @@ Wire Wire Line
 Wire Wire Line
 	2100 4100 2150 4100
 Wire Wire Line
-	10250 1500 10250 1750
+	9950 1500 9950 1750
 Wire Wire Line
-	10250 1750 10100 1750
-Wire Wire Line
-	9900 1750 9800 1750
+	9950 1750 9800 1750
 Wire Wire Line
 	9400 1750 9500 1750
 Wire Wire Line
@@ -955,4 +925,63 @@ F 7 "HRO Electronics" H 8700 2150 50  0001 L BNN "MANUFACTURER"
 	1    8700 2150
 	1    0    0    -1  
 $EndComp
+Wire Wire Line
+	9500 2700 9950 2700
+$Comp
+L Mechanical:MountingHole_Pad H1
+U 1 1 6063F17D
+P 5750 7200
+F 0 "H1" H 5750 7400 50  0000 C CNN
+F 1 "MountingHole_Pad" H 5950 6850 50  0000 C CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2_Pad" H 5750 7200 50  0001 C CNN
+F 3 "~" H 5750 7200 50  0001 C CNN
+	1    5750 7200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole_Pad H3
+U 1 1 6057C618
+P 6150 7200
+F 0 "H3" H 6100 7400 50  0000 L CNN
+F 1 "MountingHole_Pad" H 6250 7158 50  0001 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2_Pad" H 6150 7200 50  0001 C CNN
+F 3 "~" H 6150 7200 50  0001 C CNN
+	1    6150 7200
+	1    0    0    -1  
+$EndComp
+$Comp
+L Mechanical:MountingHole_Pad H2
+U 1 1 6063EEEC
+P 5950 7200
+F 0 "H2" H 5900 7400 50  0000 L CNN
+F 1 "MountingHole_Pad" H 6050 7158 50  0001 L CNN
+F 2 "MountingHole:MountingHole_2.2mm_M2_Pad" H 5950 7200 50  0001 C CNN
+F 3 "~" H 5950 7200 50  0001 C CNN
+	1    5950 7200
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5750 7300 5750 7350
+Wire Wire Line
+	5750 7350 5950 7350
+Wire Wire Line
+	6150 7300 6150 7350
+Wire Wire Line
+	5950 7300 5950 7350
+Connection ~ 5950 7350
+$Comp
+L power:GND #PWR0109
+U 1 1 60590B9D
+P 5950 7400
+F 0 "#PWR0109" H 5950 7150 50  0001 C CNN
+F 1 "GND" H 6100 7350 50  0000 C CNN
+F 2 "" H 5950 7400 50  0001 C CNN
+F 3 "" H 5950 7400 50  0001 C CNN
+	1    5950 7400
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5950 7350 6150 7350
+Wire Wire Line
+	5950 7350 5950 7400
 $EndSCHEMATC

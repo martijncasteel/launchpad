@@ -1,3 +1,0 @@
-(sym_lib_table
-  (lib (name marco-keyboard-rescue)(type Legacy)(uri ${KIPRJMOD}/marco-keyboard-rescue.lib)(options "")(descr ""))
-)
