@@ -32,7 +32,7 @@ U 1 1 604E7E64
 P 5450 3900
 F 0 "J2" H 5550 4100 50  0000 C CNN
 F 1 "ICSP" H 5500 3700 50  0000 C CNN
-F 2 "Connector_PinHeader_1.00mm:PinHeader_2x03_P1.00mm_Vertical" H 5450 3900 50  0001 C CNN
+F 2 "Connector_PinHeader_2.54mm:PinHeader_2x03_P2.54mm_Vertical" H 5450 3900 50  0001 C CNN
 F 3 "~" H 5450 3900 50  0001 C CNN
 	1    5450 3900
 	1    0    0    -1  
