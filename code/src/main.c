@@ -1,6 +1,4 @@
 #define __ATmega32U4__
-#define __AVR_ATmega32U4__
-
 #define F_CPU 16000000
 
 #include <avr/io.h>
