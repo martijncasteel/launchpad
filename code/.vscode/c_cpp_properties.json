@@ -1,0 +1,47 @@
+{
+    "env": {
+        "arduinoAppPath": "/System/Volumes/Data/Users/martijn/Applications/Arduino.app/Contents/Java/hardware/tools"
+    },
+    "configurations": [
+        {
+            "name": "Mac",
+            "includePath": [
+                "${arduinoAppPath}/avr/avr/include/avr/**",
+                "${arduinoAppPath}/avr/avr/include/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__ATmega32U4__",
+                "__AVR_ATmega32U4__"
+            ],
+            "compilerPath": "${arduinoAppPath}/avr/bin/avr-gcc",
+            "compilerArgs": [
+                "-DF_CPU=16000000 -mmcu=32u4"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "macos-gcc-x64",
+            "configurationProvider": "ms-vscode.makefile-tools"
+        },
+        {
+            "name": "Linux",
+            "includePath": [
+                "/usr/lib/avr/include/avr/**",
+                "/usr/lib/avr/include/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__ATmega32U4__",
+                "__AVR_ATmega32U4__"
+            ],
+            "compilerPath": "/usr/bin/avr-gcc",
+            "compilerArgs": [
+                "-DF_CPU=16000000 -mmcu=32u4" //  -specs=/usr/lib/gcc/avr/5.4.0/device-specs/specs-atmega32u4 ?
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
