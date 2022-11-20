@@ -1,0 +1,24 @@
+{
+    "configurations": [
+        {
+            "name": "avr-gcc",
+            "includePath": [
+                "/usr/lib/avr/include/avr/**",
+                "/usr/lib/avr/include/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__ATmega32U4__",
+                "__AVR_ATmega32U4__"
+            ],
+            "compilerPath": "/usr/bin/avr-gcc",
+            "compilerArgs": [
+                "-DF_CPU=16000000 -mmcu=32u4 -specs=/usr/lib/gcc/avr/5.4.0/device-specs/specs-atmega32u4"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64"
+        }
+    ],
+    "version": 4
+}
