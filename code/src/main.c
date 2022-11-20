@@ -6,13 +6,21 @@
  
 int main()
 {
-  DDRC |= (1 << DDC7);    // Make pin 13 be an output.  
+  DDRF |= (1 << DDF0);        // Make pin 23 be an output.  
   while(1)
   {
-    PORTC |= (1 << PORTC7);   // Turn the LED on.
-    _delay_ms(500);
-    PORTC &= ~(1 << PORTC7);  // Turn the LED off.
-    _delay_ms(500);
+    PORTF |= (1 << PORTF0);   // Turn the LED on.
+    _delay_ms(50);
+    PORTF &= ~(1 << PORTF0);  // Turn the LED off.
+    _delay_ms(50);
+    PORTF |= (1 << PORTF0);   // Turn the LED on.
+    _delay_ms(50);
+    PORTF &= ~(1 << PORTF0);  // Turn the LED off.
+    _delay_ms(50);
+    PORTF |= (1 << PORTF0);   // Turn the LED on.
+    _delay_ms(200);
+    PORTF &= ~(1 << PORTF0);  // Turn the LED off.
+    _delay_ms(50);
   }
 
   return 0;

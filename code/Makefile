@@ -9,7 +9,7 @@ SRCDIR 		= src
 BUILDDIR 	= build
 
 CC 				= avr-gcc -DF_CPU=$(CLK) -mmcu=$(MCU)
-AVRDUDE 	= avrdude -v -c arduino -p $(MCU) -P /dev/tty.usb*
+AVRDUDE 	= avrdude -v -carduino -p$(MCU) -P/dev/ttyUSB0 -b19200
 OBJCOPY 	= avr-objcopy
 
 SOURCES 	:= $(shell find $(SRCDIR) -type f -name '*.c')
@@ -35,7 +35,11 @@ $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 flash:
 	$(AVRDUDE) -U flash:w:$(TARGET):i
 
+fuses:
+	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
+	$(AVRDUDE) -U lfuse:w:0xFF:m -U hfuse:w:0xD8:m -U efuse:w:0xCB:m
+
 clean:
 	-rm -r $(BUILDDIR) $(TARGET)
 
-.PHONY: clean flash
+.PHONY: clean flash fuses
