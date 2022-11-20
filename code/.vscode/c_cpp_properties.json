@@ -1,7 +1,7 @@
 {
     "configurations": [
         {
-            "name": "avr-gcc",
+            "name": "Linux",
             "includePath": [
                 "/usr/lib/avr/include/avr/**",
                 "/usr/lib/avr/include/**",
@@ -13,7 +13,7 @@
             ],
             "compilerPath": "/usr/bin/avr-gcc",
             "compilerArgs": [
-                "-DF_CPU=16000000 -mmcu=32u4 -specs=/usr/lib/gcc/avr/5.4.0/device-specs/specs-atmega32u4"
+                "-DF_CPU=16000000 -mmcu=32u4"
             ],
             "cStandard": "c99",
             "cppStandard": "c++11",
