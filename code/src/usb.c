@@ -46,7 +46,7 @@ int init2() {
   return 0;
 }
  */
-int init() {
+int8_t init() {
   cli();                                  // global interrrupt disabled
 
   UHWCON |= (1 << UVREGE);                // enable USB pads regulator
@@ -113,9 +113,9 @@ ISR(USB_GEN_vect){
   if (udint & (1 << EORSTI)) {
     UDINT &= ~(1 << EORSTI);              // reset configuration version
 
-    UENUM = 0x00;                            // select endpoint 0
+    UENUM = 0x00;                         // select endpoint 0
     UECONX = (1 << EPEN);                 // enable the endpoint
-    UECFG0X = 0; //&= ~(1 << EPDIR);             // OUT endpoint
+    UECFG0X &= ~(1 << EPDIR);             // OUT endpoint
     UECFG1X |= (1 << EPSIZE1) |           // 32 bytes endpoint
       (1 << ALLOC);                       // allocate it
     
@@ -236,18 +236,30 @@ ISR(USB_COM_vect) {
 
       } else if (type == STRING) {
 
-        if (index == 0) {         // return language code
+        if (index == 0) {         // return supported language codes
+
+          uint16_t langids[] = {
+            0x0409,               // English (United States)
+            0x0413                // Dutch (Netherlands)
+          };
+
+          send_uint16_data(&langids, sizeof(langids), wLength);
+          return;
 
         }else if (index == 1){    // iManufacturer string descriptor
 
+          //004d 0061 0072 0074 0069 006a 006e 0020 0043 0061 0073 0074 0065 0065 006c
+
           uint16_t manufactorer[] = MANUFACTORER;
-          send_raw_data(manufactorer, sizeof(manufactorer) - 1, wLength);
+          send_uint16_data(manufactorer, sizeof(manufactorer) - 2, wLength);
           return;
 
         } else if (index == 2){   // iProduct string descriptor
 
+          // 004c 0061 0075 006e 0063 0068 0070 0061 0064
+
           uint16_t name[] = PRODUCTNAME;
-          send_raw_data(name, sizeof(name) - 1, wLength);
+          send_uint16_data(name, sizeof(name) - 2, wLength);
           return;
       
         }
@@ -309,7 +321,7 @@ ISR(USB_COM_vect) {
  * @param length number of bytes
  * @param wLength requested length from host
  */
-int send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
+int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
   uint8_t* data = descriptor;
   uint8_t lbyte = length > wLength ? wLength : length; // only send what is asked for
 
@@ -320,7 +332,7 @@ int send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
       ;
     
     if (UEINTX & (1 << RXOUTI))
-      return;  // If there is another packet, exit to handle it
+      return -1;  // If there is another packet, exit to handle it
 
     // split it up in packages
     uint8_t packet = lbyte > PACKETSIZE ? PACKETSIZE: lbyte; 
@@ -335,41 +347,40 @@ int send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
     UEINTX &= ~(1 << TXINI);
   }
 
-  return;
+  return 0;
 }
 
 
 /**
- * Send raw data in *one* packet with the string descriptor, could be 
- * expanded. Current implementation allows reports up to PACKETSIZE
- * bytes.
+ * Send string data in *one* packet with the string descriptor request.
+ * Current implementation allows reports up to PACKETSIZE bytes.
  * 
  * @param data pointer to actual data 
  * @param length number of bytes
  * @param wLength requested length from host
 */
-int send_raw_data(uint16_t* data, uint8_t length, uint8_t wLength) {
+int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength) {
   uint16_t* d = data;
-  uint8_t lbyte = (length * 2 + 2) > wLength ? wLength : (length * 2 + 2);
-  uint8_t lchar = (lbyte - 2) / 2;
+  uint8_t lbyte = (length + 2) > wLength ? wLength : (length + 2); // TODO optimize?
+  uint8_t lchar = (lbyte - 2) / 2; // number of uint16 in data, at most wLength
 
   // Wait for banks to be ready for data transmission
   while (!(UEINTX & (1 << TXINI)))
     ;
 
   if (UEINTX & (1 << RXOUTI))
-    return;  // If there is another packet, exit to handle it
+    return -1;  // If there is another packet, exit to handle it
 
-  UEDATX = lbyte;
-  UEDATX = (uint8_t)0x03; // string descriptor
+  UEDATX = length + 2;
+  UEDATX = 0x03; // string descriptor
 
   for (int i = 0; i < lchar; i++) {
-    uint16_t character = (uint16_t)(d + i); // two byte unicode
+    uint16_t character = *(d + i); // two byte unicode
 
-    UEDATX = (uint8_t)(character & 255);
-    UEDATX = (uint8_t)(character >> 8) & 255;
+    UEDATX = (character & 255);
+    UEDATX = (character >> 8) & 255;
   }
 
   UEINTX &= ~(1 << TXINI);
-  return;
+  return 0;
 }

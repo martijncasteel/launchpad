@@ -10,10 +10,10 @@
 #ifndef USB_H
 #define USB_H
 
-int init();
+int8_t init();
 
-int send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength);
-int send_raw_data(uint16_t* data, uint8_t length, uint8_t wLength);
+int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength);
+int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength);
 
 
 // request codes, see table 9-4 of USB2.0 specification
@@ -24,8 +24,8 @@ int send_raw_data(uint16_t* data, uint8_t length, uint8_t wLength);
 #define GET_DESCRIPTOR    0x06
 #define GET_CONFIGURATION 0x08
 #define SET_CONFIGURATION 0x09
-#define GET_INTERFACE     0x0A
-#define SET_INTERFACE     0x0B
+#define GET_INTERFACE     0x0a
+#define SET_INTERFACE     0x0b
 
 // descriptor types, see table 9-5
 #define DEVICE            0x01
@@ -130,7 +130,7 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x95, 0x08,   // report count
   0x81, 0x01,   // input variable
 
-  0xC0          // end collection
+  0xc0          // end collection
 };
 
 typedef struct { // TODO, use this?
