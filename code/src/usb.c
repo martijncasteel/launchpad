@@ -109,8 +109,8 @@ ISR(USB_GEN_vect){
   // }
 
 
-  uint8_t udint = UDINT;                   // read register once
-  UDINT = 0;                               // TODO clear interrupts
+  uint8_t udint = UDINT;                   // read UDINT register once
+  UDINT = 0;
   
   /**
    * End of reset interupt
@@ -147,7 +147,6 @@ ISR(USB_GEN_vect){
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
       UEDATX = data;                      // create report
 
-      // UEINTX = 0b00111010; // TODO is this correct? 
       UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
 
@@ -209,7 +208,7 @@ ISR(USB_COM_vect) {
 
     if (bRequest == GET_DESCRIPTOR && bmRequestType == DEVICE_OUT) {
 
-      // get type and index from value
+      // get type and index from wValue
       uint8_t type = (wValue >> 8);
       uint8_t index = wValue; 
 
@@ -305,9 +304,8 @@ ISR(USB_COM_vect) {
     /* HID class specific requests */
 
     if (bRequest == GET_DESCRIPTOR && bmRequestType == (INTERFACE_OUT)) {
-      // get type and index from value
+      // get type from wValue
       uint8_t type = (wValue >> 8);
-      uint8_t index = wValue; 
 
       if (type == HID_DESCRIPTOR) {
         // offset used to retrieve the hid descriptor part from the config descriptor
@@ -326,7 +324,7 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << RXOUTI)))
         ; // wait for banks ready to read
 
-        uint8_t _d = UEDATX;
+        uint8_t _d = UEDATX; // TODO control led, should have added more leds
 
         UEINTX &= ~(1 << TXINI);
         UEINTX &= ~(1 << RXOUTI);
@@ -345,7 +343,6 @@ ISR(USB_COM_vect) {
 
     if (bRequest == SET_IDLE && bmRequestType == (INTERFACE_IN | CLASS)) { 
       idle_duration = wValue & 255;  // get idle duration
-      // current_idle = 0; TODO
 
       UEINTX &= ~(1 << TXINI);  // Send ACK and clear TX bit
       return;
@@ -356,7 +353,7 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << TXINI)))
         ;
 
-      UEDATX = idle_duration; // TODO missing a byte?
+      UEDATX = idle_duration;
 
       UEINTX &= ~(1 << TXINI);
       return;

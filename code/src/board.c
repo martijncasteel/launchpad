@@ -14,10 +14,11 @@
 #include <util/delay.h>
 
 uint8_t state = 0x00;
+uint8_t current;
 
 int8_t check_buttons(uint8_t* data) {
   
-  state = PIND;//PORTD;
+  state = PIND;
 
   // xor state and port, & with port -> changed buttons which are active
 

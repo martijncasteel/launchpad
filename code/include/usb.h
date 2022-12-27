@@ -101,7 +101,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x01,         // bNumInterfaces
   0x01,         // bConfigurationValue
   0x00,         // iConfiguration, no string discriptor for this config
-  0b10000000,   // bmAttributes TODO check if powered is now correct
+  0b10000000,   // bmAttributes
   0x32,         // bMaxPower, 100 mA
 
   // interface descriptor
@@ -112,7 +112,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x01,         // bNumEndpoints
   0x03,         // bInterfaceClass, HID class
   0x00,         // bInterfaceSubClass
-  0x00,         // bInterfaceProtocol TODO was 0?
+  0x01,         // bInterfaceProtocol, keyboard
   0x00,         // iInterface
 
   // HID descriptor
@@ -130,7 +130,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x81,         // bEndpointAddress, IN, interrupt
   0x03,         // bmAttributes, interrupt
   0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks
-  0x12          // wInterval, poll every 18 ms TODO
+  0x12          // wInterval, poll every 18 ms
 };
 
 
