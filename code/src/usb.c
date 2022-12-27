@@ -8,14 +8,18 @@
  * 
  * @author Martijn Casteel
  * @date 2022-12-22
-*/
+ */
 
 #include "usb.h"
+
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 
-int8_t configuration;
+uint8_t configuration = 0;
+uint8_t idle_duration;
+
+uint8_t data = 0x00;
 
 /**
  * 
@@ -45,8 +49,9 @@ int init2() {
   sei();                                  // globla interrupt enabled
   return 0;
 }
+ * @returns memory address for usb data
  */
-int8_t init() {
+uint8_t* usb_init() {
   cli();                                  // global interrrupt disabled
 
   UHWCON |= (1 << UVREGE);                // enable USB pads regulator
@@ -66,7 +71,7 @@ int8_t init() {
   configuration = 0;
   
   sei();                                  // global interrupt enabled
-  return 0;
+  return &data;
 }
 
 
@@ -140,10 +145,10 @@ ISR(USB_GEN_vect){
     UENUM = 0x01;                         // endpoint #1 for reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
-      UEDATX = 0x00;                      // create report
+      UEDATX = data;                      // create report
 
       // UEINTX = 0b00111010; // TODO is this correct? 
-      UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI);
+      UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
 
     return;
@@ -190,9 +195,9 @@ ISR(USB_COM_vect) {
     // flag, ready interrupt flag
     UEINTX &= ~((1 << RXSTPI) | (1 << RXOUTI) | (1 << TXINI)); 
 
+    /* USB device requests*/
 
-    // SET_ADDRESS for this device
-    if (bRequest == SET_ADDRESS) {
+    if (bRequest == SET_ADDRESS && bmRequestType == DEVICE_IN) {
 
       UEINTX &= ~(1 << TXINI);
       while (!(UEINTX & (1 << TXINI)))
@@ -201,10 +206,8 @@ ISR(USB_COM_vect) {
       UDADDR = wValue | (1 << ADDEN);  // Set the device address
       return;
     } 
-    
 
-    // GET_DESCRIPTOR for a specified report
-    if (bRequest == GET_DESCRIPTOR) {
+    if (bRequest == GET_DESCRIPTOR && bmRequestType == DEVICE_OUT) {
 
       // get type and index from value
       uint8_t type = (wValue >> 8);
@@ -222,16 +225,6 @@ ISR(USB_COM_vect) {
 
       } else if (type == CONFIGURATION) {
         send_pgm_data(configuration_descriptor, CONFIG_SIZE, wLength);
-        return;
-
-      } else if (type == HID_DESCRIPTOR) {
-        // offset used to retrieve the hid descriptor part from the config descriptor
-        const uint8_t* hid_descriptor = configuration_descriptor + 18;
-        send_pgm_data(hid_descriptor, pgm_read_byte(hid_descriptor), wLength);
-        return;
-
-      } else if (type == REPORT) {
-        send_pgm_data(report_descriptor, REPORT_SIZE, wLength);
         return;
 
       } else if (type == STRING) {
@@ -270,9 +263,8 @@ ISR(USB_COM_vect) {
       return;
     }
 
-
-    if (bRequest == SET_CONFIGURATION && bmRequestType == 0x00) {
-      configuration = wValue;
+    if (bRequest == SET_CONFIGURATION && bmRequestType == DEVICE_IN) {
+      configuration = wValue & 255;
 
       UEINTX &= ~(1 << TXINI);
 
@@ -290,7 +282,7 @@ ISR(USB_COM_vect) {
       return;
     }
 
-    if (bRequest == GET_CONFIGURATION && bmRequestType == 0x80) {
+    if (bRequest == GET_CONFIGURATION && bmRequestType == DEVICE_OUT) {
       // Wait for banks to be ready for data transmission
       while (!(UEINTX & (1 << TXINI)))
         ;  
@@ -301,12 +293,71 @@ ISR(USB_COM_vect) {
       return;
     }
 
-
-    if (bRequest == GET_STATUS) {
+    if (bRequest == GET_STATUS && bmRequestType == DEVICE_OUT) {
       while (!(UEINTX & (1 << TXINI)))
         ;
       UEDATX = 0;
       UEDATX = 0;
+      UEINTX &= ~(1 << TXINI);
+      return;
+    }
+  
+    /* HID class specific requests */
+
+    if (bRequest == GET_DESCRIPTOR && bmRequestType == (INTERFACE_OUT)) {
+      // get type and index from value
+      uint8_t type = (wValue >> 8);
+      uint8_t index = wValue; 
+
+      if (type == HID_DESCRIPTOR) {
+        // offset used to retrieve the hid descriptor part from the config descriptor
+        const uint8_t* hid_descriptor = configuration_descriptor + 18;
+        send_pgm_data(hid_descriptor, pgm_read_byte(hid_descriptor), wLength);
+        return;
+
+      } else if (type == REPORT) {
+        send_pgm_data(report_descriptor, REPORT_SIZE, wLength);
+        return;
+      }
+    
+    }
+
+    if (bRequest == SET_REPORT && bmRequestType == (INTERFACE_IN | CLASS)) {
+      while (!(UEINTX & (1 << RXOUTI)))
+        ; // wait for banks ready to read
+
+        uint8_t _d = UEDATX;
+
+        UEINTX &= ~(1 << TXINI);
+        UEINTX &= ~(1 << RXOUTI);
+        return;
+    }
+
+    if (bRequest == GET_REPORT && bmRequestType == (INTERFACE_OUT | CLASS)) {
+      
+      while (!(UEINTX & (1 << TXINI)))
+        ; // Wait for banks to be ready for data transmission
+
+      UEDATX = data;                      // create report
+      UEINTX &= ~(1 << TXINI);
+      return;
+    }
+
+    if (bRequest == SET_IDLE && bmRequestType == (INTERFACE_IN | CLASS)) { 
+      idle_duration = wValue & 255;  // get idle duration
+      // current_idle = 0; TODO
+
+      UEINTX &= ~(1 << TXINI);  // Send ACK and clear TX bit
+      return;
+    }
+
+    if (bRequest == GET_IDLE && bmRequestType == (INTERFACE_OUT | CLASS)) { 
+      // Wait for banks to be ready for data transmission
+      while (!(UEINTX & (1 << TXINI)))
+        ;
+
+      UEDATX = idle_duration; // TODO missing a byte?
+
       UEINTX &= ~(1 << TXINI);
       return;
     }

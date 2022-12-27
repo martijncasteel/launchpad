@@ -1,6 +1,11 @@
 {
   "C_Cpp.errorSquiggles": "enabled",
   "files.associations": {
-    "pgmspace.h": "c"
+    "pgmspace.h": "c",
+    "launchpad.h": "c",
+    "interrupt.h": "c",
+    "io.h": "c",
+    "usb.h": "c",
+    "delay.h": "c"
   }
 }
