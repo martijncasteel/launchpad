@@ -22,91 +22,72 @@ uint8_t idle_duration;
 uint8_t data = 0x00;
 
 /**
+ * Initializes usb controller and sets interrupts to do further initialization.
+ * This device is put in full-speed mode (pulling D+ high at the start) and is 
+ * powered using the usb connection.
  * 
- *
-int init2() {
-  cli();                                  // global interrrupt disabled
-
-  USBCON &= ~(1 << USBE);                 // reset USB controller
-  USBCON |= (1 << USBE);
-
-  USBCON &= ~(1 << FRZCLK);               // unfreeze the clock
-  UHWCON |= (1 << UVREGE);                // enable USB pads regulator
-  // PLLCSR |= (1 << PINDIV) | (1 << PLLE);  // use 16 MHz oscillator
-
-  // while (!(PLLCSR & (1 << PLOCK)))
-  //   ;                                     // wait until oscillator is stabilized
-
-  USBCON |= (1 << USBE) | (1 << OTGPADE); // enable USB Controller and power
-  UDIEN |= (1 << EORSTE) | (1 << SOFE);   // enable interrupts
-
-  UDCON &= ~(1 << LSM);                   // use full speed mode
-  USBCON |= (1 << VBUSTE);                // VBUS interrupt enabled
-  UDCON &= ~(1 << DETACH);                // pull D+ high for attaching to host
-
-  configuration = 0;
-  
-  sei();                                  // globla interrupt enabled
-  return 0;
-}
+ * This function returns an address to be used for updating the usb reports.
+ * 
  * @returns memory address for usb data
  */
 uint8_t* usb_init() {
   cli();                                  // global interrrupt disabled
 
+  USBCON &= ~(0x01 << USBE);              // reset USB controller
+  USBCON |= (0x01 << USBE);
+
+  USBCON &= ~(0x01 << FRZCLK);            // unfreeze the clock
+  
   UHWCON |= (1 << UVREGE);                // enable USB pads regulator
-
-  PLLCSR |= (1 << PINDIV) | (1 << PLLE);  // use 16 MHz oscillator
-  while (!(PLLCSR & (1 << PLOCK)))
-    ;                                     // wait until oscillator is stabilized
-
-  USBCON |= (1 << USBE) | (1 << OTGPADE); // enable USB Controller and power
-  USBCON &= ~(1 << FRZCLK);               // unfreeze the clock
+  USBCON |= (0x01 << OTGPADE) |           // enable VBUS pads
+    (0x01 << VBUSTE);                     // enable VBUS interrupt
   
   UDCON &= ~(1 << LSM);                   // use full speed mode
   UDCON &= ~(1 << DETACH);                // pull D+ high for attaching to host
 
-  UDIEN |= (1 << EORSTE) | (1 << SOFE);   // enable interrupts
-
-  configuration = 0;
-  
   sei();                                  // global interrupt enabled
   return &data;
 }
 
 
 /**
- * The interrupts of the USB controller are covered here. As soon as the VBUS 
- * interrupt is triggered the PLL is configured. 
+ * The general interrupts of the USB controller are covered here. As soon 
+ * as the VBUS interrupt is triggered the PLL is configured. 
  * 
  * Sends the data buffer based on actual state of the pressed buttons.
- * Within USB the host starts all communication, this interrupt will do
- * just that. After sending data buffer is cleared.
+ * Within USB the host starts all communication, the SOFI will request for
+ * data. After sending data buffer is cleared.
  * 
  */
 ISR(USB_GEN_vect){
 
-  // /**
-  //  * VBUS interrupt is performed when connecting to the device
-  //  */
-  // if (USBINT & (1 << VBUSTI)) {           // VBUS interrupt is active
-  //   USBINT &= ~(1 << VBUSTI);             // clear interrupt flag
-  //   if (USBSTA & (1 << VBUS)){            // check if device is connected
-  //     PLLCSR |= (1 << PINDIV) |           // use 16 MHz oscillator
-  //       (1 << PLLE);                      // enable PLL upscaler
+  /**
+   * VBUS interrupt is performed when connecting to the device
+   */
+  if (USBINT & (1 << VBUSTI)) {           // VBUS interrupt is active
+    USBINT &= ~(1 << VBUSTI);             // clear interrupt flag
 
-  //     while (!(PLLCSR & (1 << PLOCK)))    // wait until stabilized
-  //       ;
+    if (USBSTA & (1 << VBUS)){            // check if device is connected
+      PLLCSR |= (1 << PINDIV) |           // use 16 MHz oscillator
+        (1 << PLLE);                      // enable PLL
 
-  //     // device is powered!
-  //     UDIEN |= (1 << EORSTE) | (1 << SOFE);   // enable end of reset interrupt
+      while (!(PLLCSR & (1 << PLOCK)))
+        ; // wait until oscillator is stabilized
+
+      UDIEN |= (1 << EORSTE) |            // end of reset interrupt enabled
+        (1 << SOFE);                      // enable start of frame interrupt
+
+      // device is powered!
+      configuration = 0;
       
-  //   } else {
-  //     // device is unattached
-  //     PLLCSR = 0x00;
+    } else {
+      // device is unattached
+      PLLCSR = 0x00;
 
-  //   }
-  // }
+    }
+
+    return;
+  }
 
 
   uint8_t udint = UDINT;                   // read UDINT register once
@@ -138,7 +119,8 @@ ISR(USB_GEN_vect){
   
 
   /**
-   * Start of frame interrupt if usb is configured correctly.
+   * Start of frame interrupt if usb is configured correctly and set configuration
+   * is used to set the data endpoint.
    */
   if (configuration && (udint & (1 << SOFI))){ 
     UDINT &= ~(1 << SOFI);                // clear interrupt flag
@@ -159,12 +141,11 @@ ISR(USB_GEN_vect){
  * USB communication request, used for setting up the handshake. Either a request
  * for (1) setting the address, (2) device descriptor, (3) string descriptors,
  * (4) configuration descriptor having a reference to an interface descriptor, 
- * a HID descriptor, and an endpoint descriptor.
+ * a HID descriptor, or an endpoint descriptor.
  * 
  * After setting up the device and configuration, the interface (5) will be 
  * specified using the interface as recipient and using a report descriptor.
  * 
- *  
  */
 ISR(USB_COM_vect) {
   UENUM = 0; // endpoint number is 0, 0 is the default configuration endpoint
@@ -401,7 +382,7 @@ int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
 
 /**
  * Send string data in *one* packet with the string descriptor request.
- * Current implementation allows reports up to PACKETSIZE bytes.
+ * @note Current implementation allows reports up to PACKETSIZE bytes.
  * 
  * @param data pointer to actual data 
  * @param length number of bytes

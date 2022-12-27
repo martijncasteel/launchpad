@@ -1,5 +1,6 @@
 /**
- * board.h
+ * @file board.h
+ * @brief Header file contains the layout of the board
  * 
  * @author Martijn Casteel
  * @date 2022-12-22

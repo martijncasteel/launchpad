@@ -1,5 +1,9 @@
 /**
- * usb.h
+ * @file usb.h
+ * @brief Header file containing the USB descriptors
+ * 
+ * This header file is used to make code more readible and is used
+ * for the several descriptors it has to provide.
  * 
  * @author Martijn Casteel
  * @date 2022-12-22

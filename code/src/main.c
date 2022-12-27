@@ -1,6 +1,9 @@
 /**
- * launchpad - usb hid device
- * @brief mini keyboard acts a usb hid device to control default functions
+ * @name launchpad
+ * @file main.c
+ * 
+ * @brief Mini keypad acts a usb hid device to control default functions
+ * @link https://github.com/martijncasteel/launchpad
  * 
  * During covid I wanted to mute my mic with a simple key press. Unfortunatly I
  * am not allowed to write own drivers to solve this problem on the computer side.
