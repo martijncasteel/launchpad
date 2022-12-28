@@ -18,6 +18,25 @@
             "cStandard": "c99",
             "cppStandard": "c++11",
             "intelliSenseMode": "gcc-x64"
+        },
+        {
+            "name": "Mac",
+            "includePath": [
+                "/usr/local/Cellar/avr-gcc@9/9.4.0/avr/include/avr/**",
+                "/usr/local/Cellar/avr-gcc@9/9.4.0/avr/include/**",
+                "${workspaceFolder}/**"
+            ],
+            "defines": [
+                "__ATmega32U4__",
+                "__AVR_ATmega32U4__"
+            ],
+            "compilerPath": "/usr/local/bin/avr-gcc",
+            "compilerArgs": [
+                "-DF_CPU=16000000 -mmcu=32u4"
+            ],
+            "cStandard": "c99",
+            "cppStandard": "c++11",
+            "intelliSenseMode": "gcc-x64"
         }
     ],
     "version": 4
