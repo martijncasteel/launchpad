@@ -3,12 +3,12 @@
 
 TARGET 		= bin/launchpad.hex
 MCU 			= atmega32u4
-CLK		 		= 16000000
+CLK		 		= 16000000UL
 
 SRCDIR 		= src
 BUILDDIR 	= build
 
-CC 				= avr-gcc -DF_CPU=$(CLK) -mmcu=$(MCU)
+CC 				= avr-gcc -mmcu=$(MCU) -DF_CPU=$(CLK) #-DDEBUG
 AVRDUDE 	= avrdude -v -carduino -p$(MCU) -P/dev/ttyUSB0 -b19200
 OBJCOPY 	= avr-objcopy
 
@@ -25,18 +25,19 @@ $(TARGET): $(BUILDDIR)/main.elf
 	@echo "$(OBJCOPY) -O ihex $< $@"; $(OBJCOPY) -O ihex $< $@
 
 $(BUILDDIR)/main.elf: $(OBJECTS)
-	@echo "$(CC) -o $@ $^"; $(CC) -o $@ $^
+	@echo "$(CC) -Wall -o $@ $^"; $(CC) -o $@ $^
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)
-	@echo "$(CC) -Wall -Os -c -o $@ $^"; $(CC) -Wall -Os -c -o $@ $^
+	@echo "$(CC) -Wall -Os -c -o $@ $^"; $(CC) -Wall -Iinclude -Os -c -o $@ $^
 
 
 flash:
 	$(AVRDUDE) -U flash:w:$(TARGET):i
 
+# write arduino standard fuses, read fuses following line
+# $(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 fuses:
-	$(AVRDUDE) -U lfuse:r:-:i -U hfuse:r:-:i -U efuse:r:-:i
 	$(AVRDUDE) -U lfuse:w:0xFF:m -U hfuse:w:0xD8:m -U efuse:w:0xCB:m
 
 clean:
