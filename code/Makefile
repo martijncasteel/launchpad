@@ -4,12 +4,13 @@
 TARGET 		= bin/launchpad.hex
 MCU 			= atmega32u4
 CLK		 		= 16000000UL
+PORT			= /dev/ttyUSB0
 
 SRCDIR 		= src
 BUILDDIR 	= build
 
 CC 				= avr-gcc -mmcu=$(MCU) -DF_CPU=$(CLK) -Wall# -DDEBUG
-AVRDUDE 	= avrdude -v -carduino -p$(MCU) -P/dev/ttyUSB0 -b19200
+AVRDUDE 	= avrdude -v -carduino -p$(MCU) -P$(PORT) -b19200
 OBJCOPY 	= avr-objcopy
 
 SOURCES 	:= $(shell find $(SRCDIR) -type f -name '*.c')
