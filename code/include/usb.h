@@ -73,13 +73,15 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
 #define MANUFACTORER  u"Martijn Casteel"
 #define PRODUCTNAME   u"Launchpad"
 
-// I don't have a own product and vendor id, referring to the default
+// microchip does free sublicensing of their VID
+#define VENDORID  0x04d8    // Microchip Technology, inc.
+#define PRODUCTID 0xe6d5    // Launchpad
+
 // #define VENDORID  0x03eb    // Atmel Corp.
 // #define PRODUCTID 0x2ff4    // atmega32u4 DFU bootloader
-// TODO look into flashing using DFU bootloader?
 
-#define VENDORID  0x2341    // Arduino LCC
-#define PRODUCTID 0x0037    // Arduino Micro
+// #define VENDORID  0x2341    // Arduino LCC
+// #define PRODUCTID 0x0037    // Arduino Micro
 
 
 // max length a packet send to host on config endpoint
