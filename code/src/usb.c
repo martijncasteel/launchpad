@@ -222,16 +222,16 @@ ISR(USB_COM_vect) {
         }else if (index == 1){    // iManufacturer string descriptor
 
           //004d 0061 0072 0074 0069 006a 006e 0020 0043 0061 0073 0074 0065 0065 006c
-
           uint16_t manufactorer[] = MANUFACTORER;
+
           send_uint16_data(manufactorer, sizeof(manufactorer) - 2, wLength);
           return;
 
         } else if (index == 2){   // iProduct string descriptor
 
           // 004c 0061 0075 006e 0063 0068 0070 0061 0064
-
           uint16_t name[] = PRODUCTNAME;
+
           send_uint16_data(name, sizeof(name) - 2, wLength);
           return;
       
@@ -340,6 +340,8 @@ ISR(USB_COM_vect) {
       return;
     }
   }
+
+  UECONX |= (1 << STALLRQ) | (1 << EPEN); // invalid request
 }
 
 
@@ -350,9 +352,9 @@ ISR(USB_COM_vect) {
  * @param length number of bytes
  * @param wLength requested length from host
  */
-int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
+int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint16_t wLength) {
   uint8_t* data = descriptor;
-  uint8_t lbyte = length > wLength ? wLength : length; // only send what is asked for
+  uint16_t lbyte = length > wLength ? wLength : length; // only send what is asked for
 
   while (lbyte > 0) {
 
@@ -388,10 +390,10 @@ int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength) {
  * @param length number of bytes
  * @param wLength requested length from host
 */
-int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength) {
+int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
   uint16_t* d = data;
-  uint8_t lbyte = (length + 2) > wLength ? wLength : (length + 2); // TODO optimize?
-  uint8_t lchar = (lbyte - 2) / 2; // number of uint16 in data, at most wLength
+  uint16_t lbyte = (length + 2) > wLength ? wLength : (length + 2); // TODO optimize?
+  uint16_t lchar = (lbyte - 2) / 2; // number of uint16 in data, at most wLength
 
   // Wait for banks to be ready for data transmission
   while (!(UEINTX & (1 << TXINI)))

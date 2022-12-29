@@ -8,13 +8,12 @@ CLK		 		= 16000000UL
 SRCDIR 		= src
 BUILDDIR 	= build
 
-CC 				= avr-gcc -mmcu=$(MCU) -DF_CPU=$(CLK) #-DDEBUG
+CC 				= avr-gcc -mmcu=$(MCU) -DF_CPU=$(CLK) -Wall# -DDEBUG
 AVRDUDE 	= avrdude -v -carduino -p$(MCU) -P/dev/ttyUSB0 -b19200
 OBJCOPY 	= avr-objcopy
 
 SOURCES 	:= $(shell find $(SRCDIR) -type f -name '*.c')
 OBJECTS 	:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.c=.o))
-
 
 # avr-gcc -DF_CPU=8000000 -mmcu=attiny85 -Os -c led_flash.c
 # avr-gcc -DF_CPU=8000000 -mmcu=attiny85 -o led_flash.elf led_flash.o
@@ -22,15 +21,14 @@ OBJECTS 	:= $(patsubst $(SRCDIR)/%, $(BUILDDIR)/%, $(SOURCES:.c=.o))
 
 
 $(TARGET): $(BUILDDIR)/main.elf
-	@echo "$(OBJCOPY) -O ihex $< $@"; $(OBJCOPY) -O ihex $< $@
+	$(OBJCOPY) -O ihex $< $@
 
 $(BUILDDIR)/main.elf: $(OBJECTS)
-	@echo "$(CC) -Wall -o $@ $^"; $(CC) -o $@ $^
+	$(CC) -o $@ $^
 
 $(BUILDDIR)/%.o: $(SRCDIR)/%.c
 	@mkdir -p $(BUILDDIR)
-	@echo "$(CC) -Wall -Os -c -o $@ $^"; $(CC) -Wall -Iinclude -Os -c -o $@ $^
-
+	$(CC) -Iinclude -Os -c -o $@ $^
 
 flash:
 	$(AVRDUDE) -U flash:w:$(TARGET):i

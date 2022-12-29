@@ -27,8 +27,8 @@ typedef struct Report {
 
 data16_t* usb_init();
 
-int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength);
-int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength);
+int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint16_t wLength);
+int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
 
 // request types, see table 9-2 of USB2.0 specification
 // HOST-TO-DEVICE -> IN, DEVICE-TO-HOST -> OUT
