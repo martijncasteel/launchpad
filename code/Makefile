@@ -3,7 +3,7 @@
 
 TARGET 		= bin/launchpad.hex
 MCU 			= atmega32u4
-CLK		 		= 16000000
+CLK		 		= 16000000UL
 
 SRCDIR 		= src
 BUILDDIR 	= build

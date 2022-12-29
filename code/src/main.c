@@ -27,7 +27,7 @@
 
 #include <avr/io.h>
 #include <util/delay.h>
- 
+
 int main()
 {
 
@@ -40,14 +40,24 @@ int main()
 
   PORTD = 0xff;                 // pull up resistor, low is pressed
   DDRD &= 0x00;                 // data direction to read of PORTD
+  
   DDRF |= (1 << LED);           // Make pin 23 / PORTF0 be an output
 
-  
-  uint8_t* data = usb_init();   // initialize usb connection
-  *data = 0x00;                 // reset data buffer for USB
+  data16_t* data = usb_init();  // initialize usb connection
+  uint8_t ctr = 0;              // counter to check buttons once every 50 ms
 
-  while(1) {                    // loop check state of buttons
-    check_buttons(data);
+  while(1) {
+
+    if (ctr % 50 == 0) {
+      check_buttons(&data->dout);
+      ctr = 0;
+    }
+
+    // control led
+    animate_led(&data->din);
+    
+    ctr++;
+    _delay_ms(1); 
   }
 
   return 0;

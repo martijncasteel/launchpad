@@ -14,7 +14,18 @@
 #ifndef USB_H
 #define USB_H
 
-uint8_t* usb_init();
+/**
+ * Struct used to encapsulate in and outgoing report in a single memory 
+ * location. See report_descriptor and board.h for mapping.
+ * 
+ * @param din is used for incoming reports for led status.
+ * @param dout holds the report towards the host holding the key presses.
+ */
+typedef struct Report {
+  uint8_t din, dout;
+} data16_t;
+
+data16_t* usb_init();
 
 int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint8_t wLength);
 int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength);
@@ -76,7 +87,7 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint8_t wLength);
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 23
+#define REPORT_SIZE 105
 
 
 // Stored in PROGMEM (Program Memory) Flash
@@ -116,7 +127,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x01,         // bNumEndpoints
   0x03,         // bInterfaceClass, HID class
   0x00,         // bInterfaceSubClass
-  0x01,         // bInterfaceProtocol, keyboard
+  0x00,         // bInterfaceProtocol, 1 -> keyboard
   0x00,         // iInterface
 
   // HID descriptor
@@ -138,22 +149,79 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
 };
 
 
-// NOTE change REPORT_SIZE if length changes
+/**
+ * This is the report descriptor, the message it send is defined here
+ * lsb is the first defined. Pretty easy mapping from the PINB register.
+ * 
+ * see board.h for mapping of buttons and mapping the push-to-talk logic
+ * for BTN6 or the first two bits of this report.
+ * 
+ * @note change REPORT_SIZE if changed
+ */
 static const uint8_t report_descriptor[] PROGMEM = {
   0x05, 0x01,   // usage page (generic desktop)
-  0x09, 0x06,   // usage (keyboard)
+  0x09, 0x07,   // usage (keypad)
   0xA1, 0x01,   // collection (application)
 
-  0x05, 0x07,   // usage page (keyboard/keypad)
-  0x19, 0x04,   // local usage minimum
-  0x29, 0x0b,   // local usage maximum
-  0x15, 0x00,   // logical minimum
-  0x25, 0x01,   // logical maximum
-  0x75, 0x01,   // report size
-  0x95, 0x08,   // report count
-  0x81, 0x02,   // input (variable)
+  0x05, 0x0b,   // usage Page (Telephony)
+  0x15, 0xff,   // logical minimum (-1)
+  0x25, 0x01,   // logical maximum (1)
+  0x09, 0x2f,   // usage (Phone Mute, OOC) - BTN6
+  0x75, 0x02,   // report size (2)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x26,   // input (data, var, relative, no preferred state)   
 
-  0xc0          // end collection
+  0x05, 0x0c,   // Usage Page (Consumer)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x09, 0xe2,   // usage (volume mute, OOC) - BTN4
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+
+  0x05, 0x0b,   // usage Page (Telephony)
+  0x09, 0x2f,   // usage (phone mute, OOC) - BTN5
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+  
+  0x05, 0x0c,   // usage Page (Consumer)
+  0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
+  0x09, 0xe9,   // usage (Volume Increment, RTC) - BTN2
+  0x75, 0x01,   // report size (1)
+  0x95, 0x02,   // report count (2)
+  0x81, 0x02,   // input (data, var, absolute, preferred state)
+
+  0x05, 0x0b,   // usage Page (Telephony)
+  0x09, 0x21,   // usage (Flash, MC) - BTN0
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x02,   // input (data, var, absolute, preferred state)
+
+  0x05, 0x0c,   // usage Page (Consumer)
+  0x09, 0xe2,   // usage (volume mute, OOC) - BTN1
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+
+
+  0x05, 0x08,   // usage page (Led page)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x09, 0x09,   // usage (mute)
+  0x09, 0x17,   // usage (off-hook)
+  0x09, 0x18,   // usage (ring)
+  0x09, 0x20,   // usage (hold)
+  0x09, 0x21,   // usage (microphone)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (5)
+  0x91, 0x22,   // output (data, absolute, no preffered)
+
+  0x75, 0x01,   // report size (1)
+  0x95, 0x03,   // report count (3)
+  0x91, 0x01,   // output (const)
+
+  0xc0         // end collection
 };
 
 #endif

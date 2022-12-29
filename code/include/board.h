@@ -11,28 +11,51 @@
 #ifndef BOARD_H
 #define BOARD_H
 
-#define LED DDF0
-
 /**
- * Layout of the board, all are connected
- * to the D register (PORTD).
+ * Layout of the board, all buttons are connected to the D 
+ * register (PORTD). Should have made this mapping way 
+ * simpler, revision 2 perhaps?
+ * 
+ * There is a single led on PORTF0.
  * 
  *  +------+------+------+------+
  *  | BTN0 | BTN2 | BTN4 |      |
  *  +------+------+------+ BTN6 |
  *  | BTN1 | BTN3 | BTN5 |      |
  *  +------+------+------+------+
+ * 
  */
-#define BTN0 PORTD6
-#define BTN1 PORTD7
-#define BTN2 PORTD5
-#define BTN3 PORTD4
-#define BTN4 PORTD2
-#define BTN5 PORTD3
-#define BTN6 PORTD1
 
-#define DEFAULT = 0x00;
+#define BTN0 PIND6
+#define BTN1 PIND7
+#define BTN2 PIND5
+#define BTN3 PIND4
+#define BTN4 PIND2
+#define BTN5 PIND3
+#define BTN6 PIND1
 
-int8_t check_buttons(uint8_t* data);
+/**
+ * BTN0  - flash
+ * BTN1  - volume mute
+ * BTN2  - volume increment
+ * BTN3  - volume decrement
+ * BTN4  - volume mute (?)
+ * BTN5  - mute toggle
+ * BTN6  - Hold to unmute
+ * 
+ * PIND0 - 
+ * PIND1 - hold to mute
+ * PIND2 - volume mute (?)
+ * PIND3 - mute toggle 
+ * PIND4 - volume decrement
+ * PIND5 - volume increment
+ * PIND6 - flash
+ * PIND7 - volume mute 
+ */
+
+#define LED PORTF0
+
+int8_t check_buttons(uint8_t* dout);
+int8_t animate_led(uint8_t* din);
 
 #endif

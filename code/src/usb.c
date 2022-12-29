@@ -19,7 +19,7 @@
 uint8_t configuration = 0;
 uint8_t idle_duration;
 
-uint8_t data = 0x00;
+data16_t data; // struct with din and dout
 
 /**
  * Initializes usb controller and sets interrupts to do further initialization.
@@ -30,7 +30,7 @@ uint8_t data = 0x00;
  * 
  * @returns memory address for usb data
  */
-uint8_t* usb_init() {
+data16_t* usb_init() {
   cli();                                  // global interrrupt disabled
 
   USBCON &= ~(0x01 << USBE);              // reset USB controller
@@ -127,7 +127,7 @@ ISR(USB_GEN_vect){
     UENUM = 0x01;                         // endpoint #1 for reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
-      UEDATX = data;                      // create report
+      UEDATX = data.dout;                 // create report
 
       UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
@@ -195,7 +195,7 @@ ISR(USB_COM_vect) {
 
       // request device descriptor, only one present
       if(type == DEVICE) {
-        send_pgm_data(device_descriptor, pgm_read_byte(device_descriptor), wLength);
+        send_pgm_data((uint8_t*)device_descriptor, pgm_read_byte(device_descriptor), wLength);
         return;
 
       } else if (type == QUALIFIER){
@@ -204,7 +204,7 @@ ISR(USB_COM_vect) {
         return;
 
       } else if (type == CONFIGURATION) {
-        send_pgm_data(configuration_descriptor, CONFIG_SIZE, wLength);
+        send_pgm_data((uint8_t*)configuration_descriptor, CONFIG_SIZE, wLength);
         return;
 
       } else if (type == STRING) {
@@ -216,7 +216,7 @@ ISR(USB_COM_vect) {
             0x0413                // Dutch (Netherlands)
           };
 
-          send_uint16_data(&langids, sizeof(langids), wLength);
+          send_uint16_data(langids, sizeof(langids), wLength);
           return;
 
         }else if (index == 1){    // iManufacturer string descriptor
@@ -291,11 +291,11 @@ ISR(USB_COM_vect) {
       if (type == HID_DESCRIPTOR) {
         // offset used to retrieve the hid descriptor part from the config descriptor
         const uint8_t* hid_descriptor = configuration_descriptor + 18;
-        send_pgm_data(hid_descriptor, pgm_read_byte(hid_descriptor), wLength);
+        send_pgm_data((uint8_t*)hid_descriptor, pgm_read_byte(hid_descriptor), wLength);
         return;
 
       } else if (type == REPORT) {
-        send_pgm_data(report_descriptor, REPORT_SIZE, wLength);
+        send_pgm_data((uint8_t*)report_descriptor, REPORT_SIZE, wLength);
         return;
       }
     
@@ -305,7 +305,7 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << RXOUTI)))
         ; // wait for banks ready to read
 
-        uint8_t _d = UEDATX; // TODO control led, should have added more leds
+        data.din = UEDATX;
 
         UEINTX &= ~(1 << TXINI);
         UEINTX &= ~(1 << RXOUTI);
@@ -317,7 +317,7 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << TXINI)))
         ; // Wait for banks to be ready for data transmission
 
-      UEDATX = data;                      // create report
+      UEDATX = data.dout;                 // create report
       UEINTX &= ~(1 << TXINI);
       return;
     }
