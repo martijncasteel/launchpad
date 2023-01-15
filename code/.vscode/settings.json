@@ -6,6 +6,7 @@
     "interrupt.h": "c",
     "io.h": "c",
     "usb.h": "c",
-    "delay.h": "c"
+    "delay.h": "c",
+    "board.h": "c"
   }
 }
