@@ -12,12 +12,12 @@ The board is designed to have six regular 1u keycaps, and one 2u keycap. All use
 <br /><!-- spacing for header -->
 
 ## Different approaches so far
-The software is written in C and build using avr-gcc. Using avrdude to flash the microcontroller as well as setting some fuses. There are a few different branches with different approaches. 
+The [software](/martijncasteel/launchpad/tree/main/code) is written in C and build using avr-gcc. Using avrdude to flash the microcontroller as well as setting some fuses. There are a few different branches with different approaches. 
 
-> [USB HID Telephone pages](/martijncasteel/launchpad/tree/main) <br />
->The original idea, using USB HID Telephone pages to control the microphone. *This is currently not supported!*
+> [USB HID Telephone pages](/martijncasteel/launchpad/tree/main/code/usb-hid-telephone) <br />
+> The original idea, using USB HID Telephone pages to control the microphone. *This is currently not supported!*
 
-> [USB Keyboard shortcuts](/martijncasteel/launchpad/tree/shortcuts) <br/>
+> [USB Keyboard shortcuts](/martijncasteel/launchpad/tree/main/code/teams-shortcuts) <br/>
 > A workaround using the Teams shortcuts such as the spacebar. This does not meet all requirements.
 
 <br /><br /><!-- spacing for header -->
