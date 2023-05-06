@@ -31,32 +31,25 @@
 int main()
 {
 
-#ifdef DEBUG
-  // TODO build serial output uart.h?
-  // https://www.baldengineer.com/alternatives-to-arduinos-serial-monitor.html
-  Serial.begin(9600); // use $ screen /dev/ttyUSB0 9600 
-  Serial.println("Starting!");
-#endif
-
-  PORTD = 0xff;                 // pull up resistor, low is pressed
+  PORTD = 0xff;                 // pull up resistors, low is pressed
   DDRD &= 0x00;                 // data direction to read of PORTD
   
   DDRF |= (1 << LED);           // Make pin 23 / PORTF0 be an output
 
   data16_t* data = usb_init();  // initialize usb connection
-  uint8_t ctr = 0;              // counter to check buttons once every 50 ms
+  uint8_t counter = 0;          // counter to check buttons once every 50 ms
 
   while(1) {
 
-    if (ctr % 50 == 0) {
+    if (counter % 50 == 0) {
       check_buttons(&data->dout);
-      ctr = 0;
+      counter = 0;
     }
 
     // control led
     animate_led(&data->din);
     
-    ctr++;
+    counter++;
     _delay_ms(1); 
   }
 
