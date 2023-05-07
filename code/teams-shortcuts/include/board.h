@@ -35,22 +35,22 @@
 #define BTN6 PIND1
 
 /**
- * BTN0  - flash
- * BTN1  - volume mute
- * BTN2  - volume increment
- * BTN3  - volume decrement
- * BTN4  - volume mute (?)
- * BTN5  - mute toggle
- * BTN6  - Hold to unmute
+ * BTN0  - end call           - ctrl + shift + H    
+ * BTN1  - raise/lower hand   - ctrl + shift + K     
+ * BTN2  - volume increment   
+ * BTN3  - volume decrement   
+ * BTN4  - toggle video       - ctrl + shift + O    
+ * BTN5  - mute toggle        - ctrl + shift + M 
+ * BTN6  - Hold to unmute     - ctrl + space
  * 
  * PIND0 - 
- * PIND1 - hold to mute
- * PIND2 - volume mute (?)
- * PIND3 - mute toggle 
+ * PIND1 - Hold to unmute     - ctrl + space
+ * PIND2 - toggle video       - ctrl + shift + O  
+ * PIND3 - mute toggle        - ctrl + shift + M
  * PIND4 - volume decrement
  * PIND5 - volume increment
- * PIND6 - flash
- * PIND7 - volume mute 
+ * PIND6 - end call           - ctrl + shift + H 
+ * PIND7 - raise/lower hand   - ctrl + shift + K  
  */
 
 #define LED PORTF0

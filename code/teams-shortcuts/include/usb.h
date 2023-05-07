@@ -159,6 +159,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  * for BTN6 or the first two bits of this report.
  * 
  * @note change REPORT_SIZE if changed
+ * @todo change to use keyboard shortcuts, see board.h
  */
 static const uint8_t report_descriptor[] PROGMEM = {
   0x05, 0x01,   // usage page (generic desktop)
