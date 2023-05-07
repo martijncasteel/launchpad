@@ -15,11 +15,11 @@ The [binaries](bin/) can be flashed on the board using the Makefile in the respe
 # built intermediates in /build and binary in ../bin
 make
 
-# flash to microcontroller, *check port id*
-make flash
+# flash to microcontroller
+make flash PORT=/dev/ttyUSB0
 
 # set fuses on microcontroller
-make fuses
+make fuses PORT=/dev/ttyUSB0
 
 # remove intermediates and binary
 make clean

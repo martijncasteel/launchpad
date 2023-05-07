@@ -53,9 +53,19 @@
  * PIND7 - raise/lower hand   - ctrl + shift + K  
  */
 
+#define LCTRL   0x01
+#define LSHIFT  0x02
+#define LGUI    0x08
+
+#define KEY_H       0x0B
+#define KEY_K       0x0E
+#define KEY_M       0x10
+#define KEY_O       0x12
+#define KEY_SPACE   0x2C
+
 #define LED PORTF0
 
-int8_t check_buttons(uint8_t* dout);
+int8_t check_buttons(uint32_t* dout);
 int8_t animate_led(uint8_t* din);
 
 #endif

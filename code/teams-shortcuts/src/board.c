@@ -28,24 +28,56 @@ uint8_t state = 0x00;
  * 
  * @param dout pointer to memory address send as report
  */
-int8_t check_buttons(uint8_t* dout) {
+int8_t check_buttons(uint32_t* dout) {
+
+  // if register is not cleared, wait another cycle
+  if ( *dout > 0 ) {
+    return 1;
+  }
   
   // bitwise not the register, pull-up resistors are used for the buttons
   uint8_t current = ~PIND;
-  uint8_t data = current & 0b11111100;  // don't take first two bits 
-
-  // BTN6 check if state has changed, xor PIND1
-  if ((current & (1 << PIND1)) ^ (state & (1 << PIND1))) {
-
-    if (current & (1 << PIND1)) {       // button is pressed    
-      data |= 0b00000011;               // pressed, unmute
-    } else {
-      data |= 0b00000001;               // released, mute on 
-    }
-  }
-
-  *dout = data;                         // fill the register
+  uint8_t changes = current ^ state;
   state = current;                      // remember state for next iteration
+
+  uint32_t data = 0;
+
+  uint8_t *modifiers = (uint8_t*) &data;
+  uint8_t *key_1 = (uint8_t*)(&data + 1);
+
+  if (changes & (1 << PIND1)) {         // toggle mute when pressed
+    // ctrl+space
+    *modifiers = LCTRL;
+    *key_1 = KEY_SPACE;
+
+  } else if (changes & (1 << PIND2)) {  // toggle video
+    // ctrl + shift + O
+    *modifiers = LCTRL | LSHIFT;
+    *key_1 = KEY_O;
+
+  } else if (changes & (1 << PIND3)) {  // toggle microphone mute
+    // ctrl + shift + M
+    *modifiers = LCTRL | LSHIFT;
+    *key_1 = KEY_M;
+
+  } else if (changes & (1 << PIND4)) {  // volume decrement
+    data |= 0x10000000;
+
+  } else if (changes & (1 << PIND5)) {  // volume increment
+    data |= 0x01000000;
+
+  } else if (changes & (1 << PIND6)) {  // hang up phone call
+    // ctrl + shift + H
+    *modifiers = LCTRL | LSHIFT;
+    *key_1 = KEY_H;
+    
+  } else if (changes & (1 << PIND7)) {  // raise/lower hand
+    // ctrl + shift + K
+    *modifiers = LCTRL | LSHIFT;
+    *key_1 = KEY_K;
+  } 
+  
+  *dout = data;                       // fill the register
   return 0;
 }
 
@@ -57,6 +89,8 @@ int8_t check_buttons(uint8_t* dout) {
  * @param din byte holding several states defined in usb.h 
  */
 int8_t animate_led(uint8_t* din){
+  
+  // TODO blink when call is waiting, on when mic on
 
   if (*din > 0)
     PORTF |= (1 << LED);

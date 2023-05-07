@@ -32,7 +32,7 @@ int8_t check_buttons(uint8_t* dout) {
   
   // bitwise not the register, pull-up resistors are used for the buttons
   uint8_t current = ~PIND;
-  uint8_t data = current & 0b11111100;  // don't take first two bits 
+  uint8_t data = current & 0b11111100;  // don't take first two bits for BTN6
 
   // BTN6 check if state has changed, xor PIND1
   if ((current & (1 << PIND1)) ^ (state & (1 << PIND1))) {

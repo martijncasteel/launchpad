@@ -19,7 +19,7 @@
 uint8_t configuration = 0;
 uint8_t idle_duration;
 
-data16_t data; // struct with din and dout
+data_t data; // struct with din and dout
 
 /**
  * Initializes usb controller and sets interrupts to do further initialization.
@@ -30,7 +30,7 @@ data16_t data; // struct with din and dout
  * 
  * @returns memory address for usb data
  */
-data16_t* usb_init() {
+data_t* usb_init() {
   cli();                                  // global interrrupt disabled
 
   USBCON &= ~(0x01 << USBE);              // reset USB controller
@@ -127,7 +127,8 @@ ISR(USB_GEN_vect){
     UENUM = 0x01;                         // endpoint #1 for reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
-      UEDATX = data.dout;                 // create report
+      // UEDATX = data.dout;              // create report
+      send_dout_data((uint32_t*) &data.dout);
 
       UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
@@ -317,7 +318,9 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << TXINI)))
         ; // Wait for banks to be ready for data transmission
 
-      UEDATX = data.dout;                 // create report
+      // UEDATX = data.dout;               // create report
+      send_dout_data((uint32_t*) &data.dout);
+
       UEINTX &= ~(1 << TXINI);
       return;
     }
@@ -413,5 +416,22 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
   }
 
   UEINTX &= ~(1 << TXINI);
+  return 0;
+}
+
+/**
+ * Small function to send the dout register to UEDATX, a byte at a time. 
+ * 
+ * @param data data register
+ */
+int8_t send_dout_data(uint32_t* data) {
+  uint8_t* d = (uint8_t*) &data;
+
+  for (int i = 0; i < 4; i++){
+    UEDATX = *(d + i); //TODO test does this work?
+  }
+
+  *data = (uint32_t) 0;
+
   return 0;
 }
