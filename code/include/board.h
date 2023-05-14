@@ -66,6 +66,6 @@
 #define LED PORTF0
 
 int8_t check_buttons(uint32_t* dout);
-int8_t animate_led(uint8_t* din);
+int8_t animate_led(uint8_t din);
 
 #endif

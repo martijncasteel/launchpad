@@ -25,6 +25,7 @@
 #include "board.h"
 #include "usb.h"
 
+#include <string.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -42,12 +43,12 @@ int main()
   while(1) {
 
     if (counter % 50 == 0) {
-      check_buttons(&data->dout);
+      check_buttons(&(data->dout));
       counter = 0;
     }
 
     // control led
-    animate_led(&data->din);
+    // animate_led(data->din);
     
     counter++;
     _delay_ms(1); 

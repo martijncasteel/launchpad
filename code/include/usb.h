@@ -16,7 +16,7 @@
 
 /**
  * Struct used to encapsulate in and outgoing report in a single memory 
- * location. See report_descriptor and board.h for mapping.
+ * location. See report_descriptor and board.h for mapping. 40 bits long
  * 
  * @param din is used for incoming reports for led status.
  * @param dout holds the report towards the host holding the key presses.

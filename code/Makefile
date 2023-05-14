@@ -1,7 +1,7 @@
 # Launchpad makefile to compile and flash c code
 # Author: Martijn Casteel
 
-TARGET 		= ../bin/launchpad-teams-shortcuts.hex
+TARGET 		= bin/launchpad-teams-shortcuts.hex
 MCU 			= atmega32u4
 CLK		 		= 16000000UL
 PORT			= /dev/ttyUSB0
