@@ -91,8 +91,17 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
 #define CONFIG_SIZE 34
 #define REPORT_SIZE 105
 
+// endpoint id for the input
+#define ENDPOINT_ADDRESS 0x03
 
-// Stored in PROGMEM (Program Memory) Flash
+
+/**
+ * The device descriptor shares some basic information with your
+ * computer, it has a number of string descriptors and protocol
+ * versions.
+ * 
+ * The descriptor is stored in PROGMEM, like all other descriptors.
+ */
 static const uint8_t device_descriptor[] PROGMEM = {
   0x12,         // bLength, 18 bytes
   0x01,         // bDescriptorType, device
@@ -111,13 +120,21 @@ static const uint8_t device_descriptor[] PROGMEM = {
 };
 
 
+/**
+ * This is the configuration descriptor, the number of interfaces,
+ * consumed power, and polling interval is defined here. In the 
+ * future we can enable boot device property to allow waking up
+ * your computer.
+ * 
+ * @note change CONFIG_SIZE if changed
+ */
 static const uint8_t configuration_descriptor[] PROGMEM = {
   0x09,         // bLength, default configuration descriptor length
   0x02,         // bDescriptorType, configuration
   (CONFIG_SIZE & 255), ((CONFIG_SIZE >> 8) & 255), // wTotalLength
   0x01,         // bNumInterfaces
   0x01,         // bConfigurationValue
-  0x00,         // iConfiguration, no string discriptor for this config
+  0x00,         // iConfiguration, no string discriptor
   0b10000000,   // bmAttributes
   0x32,         // bMaxPower, 100 mA
 
@@ -129,8 +146,8 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x01,         // bNumEndpoints
   0x03,         // bInterfaceClass, HID class
   0x00,         // bInterfaceSubClass
-  0x00,         // bInterfaceProtocol, 1 -> keyboard
-  0x00,         // iInterface
+  0x00,         // bInterfaceProtocol, 
+  0x00,         // iInterface, no string descriptor
 
   // HID descriptor
   0x09,         // bLength
@@ -144,7 +161,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   // endpoint descriptor
   0x07,         // bLength
   0x05,         // bDescriptorType, endpoint
-  0x81,         // bEndpointAddress, IN, interrupt
+  0x80 | ENDPOINT_ADDRESS, // bEndpointAddress, IN, interrupt
   0x03,         // bmAttributes, interrupt
   0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks
   0x12          // wInterval, poll every 18 ms
@@ -155,8 +172,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  * This is the report descriptor, the message it send is defined here
  * lsb is the first defined. Pretty easy mapping from the PINB register.
  * 
- * see board.h for mapping of buttons and mapping the push-to-talk logic
- * for BTN6 or the first two bits of this report.
+ * see board.h for mapping of buttons and mapping the push-to-talk logic.
  * 
  * @note change REPORT_SIZE if changed
  */

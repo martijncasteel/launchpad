@@ -124,7 +124,7 @@ ISR(USB_GEN_vect){
    */
   if (configuration && (udint & (1 << SOFI))){ 
     UDINT &= ~(1 << SOFI);                // clear interrupt flag
-    UENUM = 0x01;                         // endpoint #1 for reports
+    UENUM = ENDPOINT_ADDRESS;             // endpoint for reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
       UEDATX = data.dout;                 // create report
@@ -148,7 +148,7 @@ ISR(USB_GEN_vect){
  * 
  */
 ISR(USB_COM_vect) {
-  UENUM = 0; // endpoint number is 0, 0 is the default configuration endpoint
+  UENUM = 0x00; // endpoint number is 0, 0 is the default configuration endpoint
 
   // USB endpoint interrupt and setup interrupt flag, setup interrupt flag is set
   // for every message the host initiates. Setup contains requesttype, request, 
@@ -248,7 +248,7 @@ ISR(USB_COM_vect) {
 
       UEINTX &= ~(1 << TXINI);
 
-      UENUM = 0x01;
+      UENUM = ENDPOINT_ADDRESS;
       UECONX = (1 << EPEN);
 
       UECFG0X |= (1 << EPDIR) |           // IN endpoint
