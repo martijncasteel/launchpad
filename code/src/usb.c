@@ -97,7 +97,7 @@ ISR(USB_GEN_vect){
    * End of reset interupt
    */
   if (udint & (1 << EORSTI)) {
-    UDINT &= ~(1 << EORSTI);              // reset configuration version
+    UDINT &= ~(1 << EORSTI);              // reset interrupt flag
 
     UENUM = 0x00;                         // select endpoint 0
     UECONX = (1 << EPEN);                 // enable the endpoint
@@ -122,9 +122,9 @@ ISR(USB_GEN_vect){
    * Start of frame interrupt if usb is configured correctly and set configuration
    * is used to set the data endpoint.
    */
-  if (configuration && (udint & (1 << SOFI))){ 
+  if ((udint & (1 << SOFI)) && configuration ){ 
     UDINT &= ~(1 << SOFI);                // clear interrupt flag
-    UENUM = ENDPOINT_ADDRESS;             // endpoint for reports
+    UENUM = 0x01;                         // endpoint for launchpad reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
       UEDATX = data.dout;                 // create report
@@ -174,6 +174,7 @@ ISR(USB_COM_vect) {
     // will be cleared. received setup interrupt flag, received out data interrupt 
     // flag, ready interrupt flag
     UEINTX &= ~((1 << RXSTPI) | (1 << RXOUTI) | (1 << TXINI)); 
+
 
     /* USB device requests*/
 
@@ -248,7 +249,7 @@ ISR(USB_COM_vect) {
 
       UEINTX &= ~(1 << TXINI);
 
-      UENUM = ENDPOINT_ADDRESS;
+      UENUM = 0x01;
       UECONX = (1 << EPEN);
 
       UECFG0X |= (1 << EPDIR) |           // IN endpoint

@@ -91,9 +91,6 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
 #define CONFIG_SIZE 34
 #define REPORT_SIZE 105
 
-// endpoint id for the input
-#define ENDPOINT_ADDRESS 0x03
-
 
 /**
  * The device descriptor shares some basic information with your
@@ -161,7 +158,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   // endpoint descriptor
   0x07,         // bLength
   0x05,         // bDescriptorType, endpoint
-  0x80 | ENDPOINT_ADDRESS, // bEndpointAddress, IN, interrupt
+  0x80 | 0x01,  // bEndpointAddress, IN, interrupt
   0x03,         // bmAttributes, interrupt
   0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks
   0x12          // wInterval, poll every 18 ms
