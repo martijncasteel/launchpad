@@ -58,7 +58,7 @@ int8_t check_buttons(uint8_t* dout) {
  */
 int8_t animate_led(uint8_t* din){
 
-  if (*din > 0)
+  if (din > 0)
     PORTF |= (1 << LED);
   else
     PORTF &= ~(1 << LED);

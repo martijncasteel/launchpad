@@ -36,18 +36,18 @@ int main()
   
   DDRF |= (1 << LED);           // Make pin 23 / PORTF0 be an output
 
-  data16_t* data = usb_init();  // initialize usb connection
+  data_t* data = usb_init();  // initialize usb connection
   uint8_t counter = 0;          // counter to check buttons once every 50 ms
 
   while(1) {
 
     if (counter % 50 == 0) {
-      check_buttons(&data->dout);
+      check_buttons(&(data->dout));
       counter = 0;
     }
 
     // control led
-    animate_led(&data->din);
+    // animate_led(&(data->din));
     
     counter++;
     _delay_ms(1); 

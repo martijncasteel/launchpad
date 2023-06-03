@@ -23,12 +23,13 @@
  */
 typedef struct Report {
   uint8_t din, dout;
-} data16_t;
+} data_t;
 
-data16_t* usb_init();
+data_t* usb_init();
 
 int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint16_t wLength);
 int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
+int8_t send_dout_data(uint8_t* data);
 
 // request types, see table 9-2 of USB2.0 specification
 // HOST-TO-DEVICE -> IN, DEVICE-TO-HOST -> OUT
@@ -77,19 +78,12 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
 #define VENDORID  0x04d8    // Microchip Technology, inc.
 #define PRODUCTID 0xe6d5    // Launchpad
 
-// #define VENDORID  0x03eb    // Atmel Corp.
-// #define PRODUCTID 0x2ff4    // atmega32u4 DFU bootloader
-
-// #define VENDORID  0x2341    // Arduino LCC
-// #define PRODUCTID 0x0037    // Arduino Micro
-
-
 // max length a packet send to host on config endpoint
 #define PACKETSIZE 0x20
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 105
+#define REPORT_SIZE 93
 
 
 /**
@@ -158,9 +152,9 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   // endpoint descriptor
   0x07,         // bLength
   0x05,         // bDescriptorType, endpoint
-  0x80 | 0x01,  // bEndpointAddress, IN, interrupt
+  0x81,         // bEndpointAddress 1, IN, interrupt
   0x03,         // bmAttributes, interrupt
-  0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks
+  0x08, 0x00,   // wMaxPacketSize - The size of the report banks
   0x12          // wInterval, poll every 18 ms
 };
 
@@ -175,10 +169,11 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  */
 static const uint8_t report_descriptor[] PROGMEM = {
   0x05, 0x01,   // usage page (generic desktop)
-  0x09, 0x07,   // usage (keypad)
+
+  0x09, 0x06,   // usage (keyboard)
   0xA1, 0x01,   // collection (application)
 
-  0x05, 0x0b,   // usage Page (Telephony)
+  0x05, 0x0b,   // usage Page (telephony)
   0x15, 0xff,   // logical minimum (-1)
   0x25, 0x01,   // logical maximum (1)
   0x09, 0x2f,   // usage (Phone Mute, OOC) - BTN6
@@ -186,7 +181,7 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x95, 0x01,   // report count (1)
   0x81, 0x26,   // input (data, var, relative, no preferred state)   
 
-  0x05, 0x0c,   // Usage Page (Consumer)
+  0x05, 0x0c,   // usage Page (consumer)
   0x15, 0x00,   // logical minimum (0)
   0x25, 0x01,   // logical maximum (1)
   0x09, 0xe2,   // usage (volume mute, OOC) - BTN4
@@ -194,47 +189,55 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x95, 0x01,   // report count (1)
   0x81, 0x06,   // input (data, var, relative, preferred state)
 
-  0x05, 0x0b,   // usage Page (Telephony)
+  0x05, 0x0b,   // usage Page (telephony)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x09, 0x2f,   // usage (phone mute, OOC) - BTN5
   0x75, 0x01,   // report size (1)
   0x95, 0x01,   // report count (1)
   0x81, 0x06,   // input (data, var, relative, preferred state)
   
-  0x05, 0x0c,   // usage Page (Consumer)
+  0x05, 0x0c,   // usage Page (consumer)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
   0x09, 0xe9,   // usage (Volume Increment, RTC) - BTN2
   0x75, 0x01,   // report size (1)
   0x95, 0x02,   // report count (2)
   0x81, 0x02,   // input (data, var, absolute, preferred state)
 
-  0x05, 0x0b,   // usage Page (Telephony)
+  0x05, 0x0b,   // usage Page (telephony)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x09, 0x21,   // usage (Flash, MC) - BTN0
   0x75, 0x01,   // report size (1)
   0x95, 0x01,   // report count (1)
   0x81, 0x02,   // input (data, var, absolute, preferred state)
 
-  0x05, 0x0c,   // usage Page (Consumer)
+  0x05, 0x0c,   // usage Page (consumer)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x09, 0xe2,   // usage (volume mute, OOC) - BTN1
   0x75, 0x01,   // report size (1)
   0x95, 0x01,   // report count (1)
   0x81, 0x06,   // input (data, var, relative, preferred state)
 
 
-  0x05, 0x08,   // usage page (Led page)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0x09,   // usage (mute)
-  0x09, 0x17,   // usage (off-hook)
-  0x09, 0x18,   // usage (ring)
-  0x09, 0x20,   // usage (hold)
-  0x09, 0x21,   // usage (microphone)
-  0x75, 0x01,   // report size (1)
-  0x95, 0x01,   // report count (5)
-  0x91, 0x22,   // output (data, absolute, no preffered)
+  // 0x05, 0x08,   // usage page (led page)
+  // 0x15, 0x00,   // logical minimum (0)
+  // 0x25, 0x01,   // logical maximum (1)
+  // 0x09, 0x09,   // usage (mute)
+  // 0x09, 0x17,   // usage (off-hook)
+  // 0x09, 0x18,   // usage (ring)
+  // 0x09, 0x20,   // usage (hold)
+  // 0x09, 0x21,   // usage (microphone)
+  // 0x75, 0x01,   // report size (1)
+  // 0x95, 0x01,   // report count (5)
+  // 0x91, 0x22,   // output (data, absolute, no preffered)
 
-  0x75, 0x01,   // report size (1)
-  0x95, 0x03,   // report count (3)
-  0x91, 0x01,   // output (const)
+  // 0x75, 0x01,   // report size (1)
+  // 0x95, 0x03,   // report count (3)
+  // 0x91, 0x01,   // output (const)
 
   0xc0         // end collection
 };

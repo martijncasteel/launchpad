@@ -12,6 +12,8 @@
 
 #include "usb.h"
 
+#include <stdlib.h>
+#include <string.h>
 #include <avr/io.h>
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
@@ -19,7 +21,7 @@
 uint8_t configuration = 0;
 uint8_t idle_duration;
 
-data16_t data; // struct with din and dout
+data_t *data; // struct with din and dout
 
 /**
  * Initializes usb controller and sets interrupts to do further initialization.
@@ -30,7 +32,7 @@ data16_t data; // struct with din and dout
  * 
  * @returns memory address for usb data
  */
-data16_t* usb_init() {
+data_t* usb_init() {
   cli();                                  // global interrrupt disabled
 
   USBCON &= ~(0x01 << USBE);              // reset USB controller
@@ -46,7 +48,10 @@ data16_t* usb_init() {
   UDCON &= ~(1 << DETACH);                // pull D+ high for attaching to host
 
   sei();                                  // global interrupt enabled
-  return &data;
+
+  data = (data_t *) malloc(sizeof(data_t)); // initialize register
+  memset(data, 0, sizeof(data_t));
+  return data;
 }
 
 
@@ -127,7 +132,7 @@ ISR(USB_GEN_vect){
     UENUM = 0x01;                         // endpoint for launchpad reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
-      UEDATX = data.dout;                 // create report
+      send_dout_data(&(data->dout));      // create report
 
       UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
@@ -166,7 +171,7 @@ ISR(USB_COM_vect) {
     uint16_t wIndex = UEDATX;
     wIndex |= UEDATX << 8;
 
-    // wlenght is the expected length of the responce for this request
+    // wlenght is the expected length of the response for this request
     uint16_t wLength = UEDATX; 
     wLength |= UEDATX << 8;
   
@@ -306,7 +311,7 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << RXOUTI)))
         ; // wait for banks ready to read
 
-        data.din = UEDATX;
+        data->din = UEDATX;
 
         UEINTX &= ~(1 << TXINI);
         UEINTX &= ~(1 << RXOUTI);
@@ -318,15 +323,16 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << TXINI)))
         ; // Wait for banks to be ready for data transmission
 
-      UEDATX = data.dout;                 // create report
+      send_dout_data(&(data->dout));      // create report
+
       UEINTX &= ~(1 << TXINI);
       return;
     }
 
     if (bRequest == SET_IDLE && bmRequestType == (INTERFACE_IN | CLASS)) { 
-      idle_duration = wValue & 255;  // get idle duration
+      idle_duration = wValue & 255;       // get idle duration
 
-      UEINTX &= ~(1 << TXINI);  // Send ACK and clear TX bit
+      UEINTX &= ~(1 << TXINI);            // Send ACK and clear TX bit
       return;
     }
 
@@ -414,5 +420,18 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
   }
 
   UEINTX &= ~(1 << TXINI);
+  return 0;
+}
+
+/**
+ * Small function to send the dout register to UEDATX, a byte at a time. 
+ * 
+ * @param dout pointer to data register
+ */
+int8_t send_dout_data(uint8_t* dout) {
+  uint8_t data = *dout;                   // copy data to variable
+  *dout = (uint8_t) 0;                    // clear register
+
+  UEDATX = data;                          // send data to buffer
   return 0;
 }
