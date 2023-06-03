@@ -95,6 +95,8 @@ int8_t check_buttons(uint32_t* dout) {
     modifiers = LCTRL | LSHIFT;
     key_1 = KEY_K;
   }
+
+  modifiers = 0; // TODO remove after testing
     
   *dout = ((uint32_t)modifiers << 24) +
           ((uint32_t)key_1 << 16) + 

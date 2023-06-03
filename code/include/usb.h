@@ -91,7 +91,7 @@ int8_t send_dout_data(uint32_t* data);
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 89
+#define REPORT_SIZE 61
 
 
 // Stored in PROGMEM (Program Memory) Flash
@@ -130,8 +130,8 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x00,         // bAlternateSetting
   0x01,         // bNumEndpoints
   0x03,         // bInterfaceClass, HID class
-  0x00,         // bInterfaceSubClass
-  0x00,         // bInterfaceProtocol, 1 -> keyboard
+  0x00,         // bInterfaceSubClass 
+  0x01,         // bInterfaceProtocol, 1 -> keyboard
   0x00,         // iInterface
 
   // HID descriptor
@@ -148,7 +148,7 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x05,         // bDescriptorType, endpoint
   0x81,         // bEndpointAddress, IN, interrupt
   0x03,         // bmAttributes, interrupt
-  0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks
+  0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks TODO slimmed
   0x12          // wInterval, poll every 18 ms
 };
 
@@ -164,16 +164,16 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  */
 static const uint8_t report_descriptor[] PROGMEM = {
   0x05, 0x01,   // usage page (generic desktop)
-  0x09, 0x07,   // usage (keypad)
+  0x09, 0x06,   // usage (keyboard)
   0xA1, 0x01,   // collection (application)
 
   0x05, 0x07,   // usage page (modifier keys)
   0x19, 0xE0,   // usage minimum
   0x29, 0xE7,   // usage maximum
-  0x15, 0x01,   // logical minimum
-  0x25, 0x01,   // logical maximum
-  0x75, 0x01,   // report size 1
-  0x95, 0x08,   // report count 8
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x08,   // report count (8)
   0x81, 0x02,   // input (data, var, absolute)
 
   0x05, 0x07,   // usage page (keycodes)
@@ -186,7 +186,7 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x81, 0x00,   // input (data, array)
 
   
-  0x05, 0x0c,   // usage Page (consumer)
+  0x05, 0x0c,   // usage page (consumer)
   0x15, 0x00,   // logical minimum (0)
   0x25, 0x01,   // logical maximum (1)
   0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
@@ -195,26 +195,26 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x95, 0x02,   // report count (2)
   0x81, 0x02,   // input (data, var, absolute, preferred state)
 
-  0x75, 0x06,   // report size (6)
-  0x95, 0x01,   // report count (1)
-  0x91, 0x01,   // output (const, padding)
-
-
-  0x05, 0x08,   // usage page (Led page)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0x09,   // usage (mute)
-  0x09, 0x17,   // usage (off-hook)
-  0x09, 0x18,   // usage (ring)
-  0x09, 0x20,   // usage (hold)
-  0x09, 0x21,   // usage (microphone)
   0x75, 0x01,   // report size (1)
-  0x95, 0x01,   // report count (5)
-  0x91, 0x22,   // output (data, absolute, no preffered)
+  0x95, 0x06,   // report count (6)
+  0x81, 0x01,   // input (const, padding)
 
-  0x75, 0x03,   // report size (3)
-  0x95, 0x01,   // report count (1)
-  0x91, 0x01,   // output (const, padding)
+
+  // 0x05, 0x08,   // usage page (Led page)
+  // 0x15, 0x00,   // logical minimum (0)
+  // 0x25, 0x01,   // logical maximum (1)
+  // 0x09, 0x09,   // usage (mute)
+  // 0x09, 0x17,   // usage (off-hook)
+  // 0x09, 0x18,   // usage (ring)
+  // 0x09, 0x20,   // usage (hold)
+  // 0x09, 0x21,   // usage (microphone)
+  // 0x75, 0x01,   // report size (1)
+  // 0x95, 0x01,   // report count (5)
+  // 0x91, 0x02,   // output (data, absolute)
+
+  // 0x75, 0x01,   // report size (1)
+  // 0x95, 0x03,   // report count (3)
+  // 0x91, 0x01,   // output (const, padding)
 
   0xc0         // end collection
 };
