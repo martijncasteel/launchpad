@@ -37,7 +37,6 @@ int8_t check_buttons(uint16_t* dout) {
 
   // bitwise not the register, pull-up resistors are used for the buttons
   uint8_t reading = ~PIND;  
-  uint16_t data = 0;
 
   /**
    * Some logic to only get single shot on press down, using
@@ -56,6 +55,9 @@ int8_t check_buttons(uint16_t* dout) {
   uint8_t pressed = (reading ^ state) & reading;
   uint8_t released = (reading ^ state) & state;
   state = reading;
+
+
+  uint16_t data = 0;
 
 
   // --- REPORT 1 --- 
