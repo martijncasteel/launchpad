@@ -35,10 +35,9 @@ int8_t check_buttons(uint16_t* dout) {
     return 1;
   }
 
-  uint16_t data = 0;
-
   // bitwise not the register, pull-up resistors are used for the buttons
-  uint8_t reading = ~PIND;
+  uint8_t reading = ~PIND;  
+  uint16_t data = 0;
 
   /**
    * Some logic to only get single shot on press down, using
@@ -59,6 +58,8 @@ int8_t check_buttons(uint16_t* dout) {
   state = reading;
 
 
+  // --- REPORT 1 --- 
+
   /**
    * Three buttons can control the speaker volume. The increment 
    * and decrement volume buttons are retrigger controls. As long
@@ -78,20 +79,24 @@ int8_t check_buttons(uint16_t* dout) {
   }
 
   /**
-   * According to documentation flash created a momentary on hook
-   * condition. Hence it should end a call. 
-   */
-  if (pressed & (1 << BTN0)) {            // flash
-    data |= (1 << 3);
-  } 
-  
-  /**
    * In a later amendment the camera access toggle was added to
    * the HID usage tables. IT should toggle whether an application
    * has access to the camera. 
    */
   if (pressed & (1 << BTN1)) {            // camera toggle
     data |= (1 << 11);
+  } 
+
+
+
+  // --- REPORT 2 ---
+
+  /**
+   * According to documentation flash created a momentary on hook
+   * condition. Hence it should end a call. 
+   */
+  if (pressed & (1 << BTN0)) {            // flash
+    data |= (1 << 3);
   } 
   
   /**
@@ -102,10 +107,10 @@ int8_t check_buttons(uint16_t* dout) {
    * microphone, on release the microphone is muted again.
    */
   if(pressed & (1 << BTN6)) {             // unmute on hold
-    data |= 0b00000011;
+    data |= 0b0011;
 
   }else if (released & (1 << BTN6)) {     // mute after release
-    data |= 0b00000001;
+    data |= 0b0001;
 
   } else if (pressed & (1 << BTN5)) {     // toggle mute
     data |= (1 << 2);

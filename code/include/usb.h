@@ -242,8 +242,8 @@ static const uint8_t report_descriptor[] PROGMEM = {
   // 0x95, 0x01,   // report count (5)
   // 0x91, 0x22,   // output (data, absolute, no preffered)
 
-  // 0x75, 0x01,   // report size (1)
-  // 0x95, 0x03,   // report count (3)
+  // 0x75, 0x03,   // report size (3)
+  // 0x95, 0x01,   // report count (1)
   // 0x91, 0x01,   // output (const)
 
 };
