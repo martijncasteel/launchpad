@@ -22,14 +22,15 @@
  * @param dout holds the report towards the host holding the key presses.
  */
 typedef struct Report {
-  uint8_t din, dout;
+  uint8_t din;
+  uint16_t dout;
 } data_t;
 
 data_t* usb_init();
 
 int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint16_t wLength);
 int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
-int8_t send_dout_data(uint8_t* data);
+int8_t send_dout_data(uint16_t* data);
 
 // request types, see table 9-2 of USB2.0 specification
 // HOST-TO-DEVICE -> IN, DEVICE-TO-HOST -> OUT
@@ -83,7 +84,7 @@ int8_t send_dout_data(uint8_t* data);
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 93
+#define REPORT_SIZE 94
 
 
 /**
@@ -168,60 +169,66 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  * @note change REPORT_SIZE if changed
  */
 static const uint8_t report_descriptor[] PROGMEM = {
-  0x05, 0x01,   // usage page (generic desktop)
-
-  0x09, 0x06,   // usage (keyboard)
+  0x05, 0x0c,   // usage page (consumer)
+  0x09, 0x01,   // usage (consumer control)
   0xA1, 0x01,   // collection (application)
 
-  0x05, 0x0b,   // usage Page (telephony)
+  0x85, 0x01,   // report id (1)
+
+  0x09, 0xe9,   // usage (Volume Increment, RTC) - BTN2
+  0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
+  0x09, 0xe2,   // usage (volume mute, OOC) - BTN4
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x03,   // report count (3)
+  0x81, 0x02,   // input (data, var, absolute, preferred state)
+
+  0x09, 0x78,   // usage (camera access toggle, OOC) - BTN1
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+
+  0x75, 0x04,   // report size (4)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x01,   // input (const, padding)
+
+  0xc0,         // end collection
+
+  0x05, 0x0b,   // usage page (telephony)
+  0x09, 0x05,   // usage (headset)
+  0xA1, 0x01,   // collection (application)
+
+  0x85, 0x02,   // report id (2)
+
+  0x09, 0x2f,   // usage (Phone Mute, OOC) - BTN6
   0x15, 0xff,   // logical minimum (-1)
   0x25, 0x01,   // logical maximum (1)
-  0x09, 0x2f,   // usage (Phone Mute, OOC) - BTN6
   0x75, 0x02,   // report size (2)
   0x95, 0x01,   // report count (1)
   0x81, 0x26,   // input (data, var, relative, no preferred state)   
 
-  0x05, 0x0c,   // usage Page (consumer)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0xe2,   // usage (volume mute, OOC) - BTN4
-  0x75, 0x01,   // report size (1)
-  0x95, 0x01,   // report count (1)
-  0x81, 0x06,   // input (data, var, relative, preferred state)
-
-  0x05, 0x0b,   // usage Page (telephony)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
   0x09, 0x2f,   // usage (phone mute, OOC) - BTN5
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x75, 0x01,   // report size (1)
   0x95, 0x01,   // report count (1)
   0x81, 0x06,   // input (data, var, relative, preferred state)
   
-  0x05, 0x0c,   // usage Page (consumer)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
-  0x09, 0xe9,   // usage (Volume Increment, RTC) - BTN2
-  0x75, 0x01,   // report size (1)
-  0x95, 0x02,   // report count (2)
-  0x81, 0x02,   // input (data, var, absolute, preferred state)
-
-  0x05, 0x0b,   // usage Page (telephony)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
   0x09, 0x21,   // usage (Flash, MC) - BTN0
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x75, 0x01,   // report size (1)
   0x95, 0x01,   // report count (1)
   0x81, 0x02,   // input (data, var, absolute, preferred state)
 
-  0x05, 0x0c,   // usage Page (consumer)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0xe2,   // usage (volume mute, OOC) - BTN1
-  0x75, 0x01,   // report size (1)
+  0x75, 0x04,   // report size (4)
   0x95, 0x01,   // report count (1)
-  0x81, 0x06,   // input (data, var, relative, preferred state)
+  0x81, 0x01,   // input (const, padding)
 
+  0xc0          // end collection
 
   // 0x05, 0x08,   // usage page (led page)
   // 0x15, 0x00,   // logical minimum (0)
@@ -239,7 +246,6 @@ static const uint8_t report_descriptor[] PROGMEM = {
   // 0x95, 0x03,   // report count (3)
   // 0x91, 0x01,   // output (const)
 
-  0xc0         // end collection
 };
 
 #endif

@@ -20,32 +20,99 @@ uint8_t state = 0x00;
  * So minimal manipulations have to be done. 
  * 
  * Debouncing is not required, buttons trigger on a rising edge (OOC). Volume
- * increment and decrement uses a retrigger mechanism (RTC). I looks like the 
- * volume mute button has some debouncing issues. 
+ * increment and decrement uses a retrigger mechanism (RTC), these buttons
+ * can be hold down. 
  * 
  * The push-to-talk button uses a relative no preffered state on/off control. 
  * It mimics two seperate buttons in two bits. 0b11 is off and 0b01 is on.
  * 
  * @param dout pointer to memory address send as report
  */
-int8_t check_buttons(uint8_t* dout) {
-  
-  // bitwise not the register, pull-up resistors are used for the buttons
-  uint8_t current = ~PIND;
-  uint8_t data = current & 0b11111100;  // don't take first two bits 
+int8_t check_buttons(uint16_t* dout) {
 
-  // BTN6 check if state has changed, xor PIND1
-  if ((current & (1 << PIND1)) ^ (state & (1 << PIND1))) {
-
-    if (current & (1 << PIND1)) {       // button is pressed    
-      data |= 0b00000011;               // pressed, unmute
-    } else {
-      data |= 0b00000001;               // released, mute on 
-    }
+  // if both reports are not cleared, wait another cycle
+  if ( *dout > 0 ) {
+    return 1;
   }
 
-  *dout = data;                         // fill the register
-  state = current;                      // remember state for next iteration
+  uint16_t data = 0;
+
+  // bitwise not the register, pull-up resistors are used for the buttons
+  uint8_t reading = ~PIND;
+
+  /**
+   * Some logic to only get single shot on press down, using
+   * bitwise operator _xor_ and _and_. Also compute if a button
+   * is released. Together with a delay in main.c this will also 
+   * debounce the button. 
+   * 
+   *  +---+---------+-------+---------+----------+
+   *  | # | reading | state | pressed | released |
+   *  +---+---------+-------+---------+----------+
+   *  | 1 | true    | false | true    | false    |
+   *  | 2 | true    | true  | false   | false    |
+   *  | 3 | false   | true  | false   | true     |
+   *  +---+---------+-------+---------+----------+
+   */
+  uint8_t pressed = (reading ^ state) & reading;
+  uint8_t released = (reading ^ state) & state;
+  state = reading;
+
+
+  /**
+   * Three buttons can control the speaker volume. The increment 
+   * and decrement volume buttons are retrigger controls. As long
+   * as the button is pressed the volume will change. These 
+   * buttons intentionally make use of the raw reading.
+   * 
+   * The third button is a button to mute and unmute the speaker. 
+   */
+  if (reading & (1 << BTN2)) {            // volume increment
+    data |= (1 << 8);
+
+  } else if (reading & (1 << BTN3)) {     // volume decrement
+    data |= (1 << 9);
+
+  } else if (pressed & (1 << BTN4)) {     // volume mute
+    data |= (1 << 10);
+  }
+
+  /**
+   * According to documentation flash created a momentary on hook
+   * condition. Hence it should end a call. 
+   */
+  if (pressed & (1 << BTN0)) {            // flash
+    data |= (1 << 3);
+  } 
+  
+  /**
+   * In a later amendment the camera access toggle was added to
+   * the HID usage tables. IT should toggle whether an application
+   * has access to the camera. 
+   */
+  if (pressed & (1 << BTN1)) {            // camera toggle
+    data |= (1 << 11);
+  } 
+  
+  /**
+   * The microphone is the main goal of this project. There are
+   * two buttons. BTN5 can toggle the microphone mute/unmute. 
+   * 
+   * The larger button, BTN6, is intended to hold to unmute the
+   * microphone, on release the microphone is muted again.
+   */
+  if(pressed & (1 << BTN6)) {             // unmute on hold
+    data |= 0b00000011;
+
+  }else if (released & (1 << BTN6)) {     // mute after release
+    data |= 0b00000001;
+
+  } else if (pressed & (1 << BTN5)) {     // toggle mute
+    data |= (1 << 2);
+  }
+
+
+  *dout = data;                           // fill the register
   return 0;
 }
 
@@ -54,6 +121,7 @@ int8_t check_buttons(uint8_t* dout) {
  * Animates the LED in such a way it is able to display several modes. Modes
  * including caller waiting, active caller, etc.
  * 
+ * @todo implement out reports, pay attention to byte alignment
  * @param din byte holding several states defined in usb.h 
  */
 int8_t animate_led(uint8_t* din){

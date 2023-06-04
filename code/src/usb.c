@@ -425,13 +425,31 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
 
 /**
  * Small function to send the dout register to UEDATX, a byte at a time. 
+ * The register consists of multiple reports, every byte holds a report, 
+ * see the report descriptor for more information. 
+ * 
+ * If the second byte has data, the second byte will be cleared and the 
+ * data will be send with report id 2. Otherwise only the first byte will
+ * be cleared and send with report id 1. report 1 is then also the default.
  * 
  * @param dout pointer to data register
  */
-int8_t send_dout_data(uint8_t* dout) {
-  uint8_t data = *dout;                   // copy data to variable
-  *dout = (uint8_t) 0;                    // clear register
+int8_t send_dout_data(uint16_t* dout) {
+  uint16_t data = *dout;                  // copy data to variable
 
-  UEDATX = data;                          // send data to buffer
-  return 0;
+  if ((data & 255) > 0) {                 // second byte has data
+    *dout = (data & 0xFF00);              // clear second byte, report 2
+
+    UEDATX = 0x02;
+    UEDATX = (data & 255);
+    return 0;
+
+    // TODO do I need to send an empty report afterwards?
+
+  } else {                                // send first byte as report 1
+    *dout = (data & 255);                 // clear first byte
+    UEDATX = 0x01;                        // report id
+    UEDATX = (data >> 8) & 255;           // send report to buffer
+    return 0;
+  }
 }

@@ -9,22 +9,13 @@ The board is designed to have six regular 1u keycaps, and one 2u keycap. All use
 
 ![3D render](https://github.com/martijncasteel/launchpad/blob/main/images/3d-front.png?raw=true)
 
-<br /><!-- spacing for header -->
-
-## Different approaches so far
-The [software](/martijncasteel/launchpad/tree/main/code) is written in C and built using avr-gcc. Using avrdude to flash the microcontroller as well as setting some fuses. There are a few different branches with different approaches. 
-
-> [USB HID Telephone pages](/martijncasteel/launchpad/tree/main/code/usb-hid-telephone) <br />
-> The original idea, using USB HID Telephone pages to control the microphone. *This is currently not supported!*
-
-> [USB Keyboard shortcuts](/martijncasteel/launchpad/tree/main/code/teams-shortcuts) <br/>
-> A workaround using the Teams shortcuts such as the spacebar. This does not meet all requirements.
+The [software](/martijncasteel/launchpad/tree/main/code) is written in C and built using avr-gcc. Using avrdude to flash the microcontroller as well as setting some fuses. In my search on how other have done this, I haven't found a lot of sources. To help you further along I added loads of comments. 
 
 <br /><br /><!-- spacing for header -->
 
 ## The story so far
 During my study I did a lot of software engineering but never went further than using arduino's. So my goal was to learn more about hardware. A lot of youtube videos brought me so far. [Ben Eater](https://youtu.be/wdgULBpRoXk) has some great videos explaining the USB protocol. [Mitch Davis](https://youtu.be/Q2DakPocvfs) goes into more detail about programming Atmega microcontrollers.
 
-Using schematics from arduino I was able to create a schematic quite easily. Of course, also looked at the datasheets to have a better understanding of the crystal setup.
+Using schematics from arduino I was able to create a schematic quite easily. Of course, also looked at the datasheets to have a better understanding.
 
-After creating the [assembly](/martijncasteel/launchpad/tree/main/assembly), I uploaded the files to a pcb manufactorer and also let them populate the board. Then finally I started [coding](/martijncasteel/launchpad/tree/main/code), at first with the arduino IDE. But quickly realised that I wanted to do it from scratch. Down the rabbit hole, I went!
+After creating the [assembly](/martijncasteel/launchpad/tree/main/assembly), I uploaded the files to a pcb manufactorer and also let them populate the board. I had some issues with the USB port since the wrong one was in the BOM. Finally I started [coding](/martijncasteel/launchpad/tree/main/code), at first with the arduino IDE. But quickly realised that I wanted to do it from scratch. Down the rabbit hole, I went!
