@@ -16,21 +16,21 @@
 
 /**
  * Struct used to encapsulate in and outgoing report in a single memory 
- * location. See report_descriptor and board.h for mapping. 40 bits long
+ * location. See report_descriptor and board.h for mapping.
  * 
  * @param din is used for incoming reports for led status.
  * @param dout holds the report towards the host holding the key presses.
  */
-typedef struct Data{
+typedef struct Report {
   uint8_t din;
-  uint32_t dout;
+  uint16_t dout;
 } data_t;
 
 data_t* usb_init();
 
 int8_t send_pgm_data(uint8_t* descriptor, uint8_t length, uint16_t wLength);
 int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength);
-int8_t send_dout_data(uint32_t* data);
+int8_t send_dout_data(uint16_t* data);
 
 // request types, see table 9-2 of USB2.0 specification
 // HOST-TO-DEVICE -> IN, DEVICE-TO-HOST -> OUT
@@ -79,22 +79,21 @@ int8_t send_dout_data(uint32_t* data);
 #define VENDORID  0x04d8    // Microchip Technology, inc.
 #define PRODUCTID 0xe6d5    // Launchpad
 
-// #define VENDORID  0x03eb    // Atmel Corp.
-// #define PRODUCTID 0x2ff4    // atmega32u4 DFU bootloader
-
-// #define VENDORID  0x2341    // Arduino LCC
-// #define PRODUCTID 0x0037    // Arduino Micro
-
-
 // max length a packet send to host on config endpoint
 #define PACKETSIZE 0x20
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 61
+#define REPORT_SIZE 126
 
 
-// Stored in PROGMEM (Program Memory) Flash
+/**
+ * The device descriptor shares some basic information with your
+ * computer, it has a number of string descriptors and protocol
+ * versions.
+ * 
+ * The descriptor is stored in PROGMEM, like all other descriptors.
+ */
 static const uint8_t device_descriptor[] PROGMEM = {
   0x12,         // bLength, 18 bytes
   0x01,         // bDescriptorType, device
@@ -113,13 +112,21 @@ static const uint8_t device_descriptor[] PROGMEM = {
 };
 
 
+/**
+ * This is the configuration descriptor, the number of interfaces,
+ * consumed power, and polling interval is defined here. In the 
+ * future we can enable boot device property to allow waking up
+ * your computer.
+ * 
+ * @note change CONFIG_SIZE if changed
+ */
 static const uint8_t configuration_descriptor[] PROGMEM = {
   0x09,         // bLength, default configuration descriptor length
   0x02,         // bDescriptorType, configuration
   (CONFIG_SIZE & 255), ((CONFIG_SIZE >> 8) & 255), // wTotalLength
   0x01,         // bNumInterfaces
   0x01,         // bConfigurationValue
-  0x00,         // iConfiguration, no string discriptor for this config
+  0x00,         // iConfiguration, no string discriptor
   0b10000000,   // bmAttributes
   0x32,         // bMaxPower, 100 mA
 
@@ -130,9 +137,9 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   0x00,         // bAlternateSetting
   0x01,         // bNumEndpoints
   0x03,         // bInterfaceClass, HID class
-  0x00,         // bInterfaceSubClass 
-  0x01,         // bInterfaceProtocol, 1 -> keyboard
-  0x00,         // iInterface
+  0x00,         // bInterfaceSubClass
+  0x00,         // bInterfaceProtocol, 
+  0x00,         // iInterface, no string descriptor
 
   // HID descriptor
   0x09,         // bLength
@@ -146,9 +153,9 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
   // endpoint descriptor
   0x07,         // bLength
   0x05,         // bDescriptorType, endpoint
-  0x81,         // bEndpointAddress, IN, interrupt
+  0x81,         // bEndpointAddress 1, IN, interrupt
   0x03,         // bmAttributes, interrupt
-  0x08, 0x00,   // wMaxPacketSize - The size of the keyboard banks TODO slimmed
+  0x08, 0x00,   // wMaxPacketSize - The size of the report banks
   0x12          // wInterval, poll every 18 ms
 };
 
@@ -157,66 +164,91 @@ static const uint8_t configuration_descriptor[] PROGMEM = {
  * This is the report descriptor, the message it send is defined here
  * lsb is the first defined. Pretty easy mapping from the PINB register.
  * 
- * see board.h for mapping of buttons and mapping the push-to-talk logic
- * for BTN6 or the first two bits of this report.
+ * see board.h for mapping of buttons and mapping the push-to-talk logic.
  * 
  * @note change REPORT_SIZE if changed
  */
 static const uint8_t report_descriptor[] PROGMEM = {
-  0x05, 0x01,   // usage page (generic desktop)
-  0x09, 0x06,   // usage (keyboard)
+  0x05, 0x0c,   // usage page (consumer)
+  0x09, 0x01,   // usage (consumer control)
   0xA1, 0x01,   // collection (application)
 
-  0x05, 0x07,   // usage page (modifier keys)
-  0x19, 0xE0,   // usage minimum
-  0x29, 0xE7,   // usage maximum
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x75, 0x01,   // report size (1)
-  0x95, 0x08,   // report count (8)
-  0x81, 0x02,   // input (data, var, absolute)
+  0x85, 0x01,   // report id (1)
 
-  0x05, 0x07,   // usage page (keycodes)
-  0x19, 0x00,   // usage minimum
-  0x29, 0x65,   // usage maximum
-  0x15, 0x00,   // logical minimum
-  0x25, 0x65,   // logical maximum
-  0x75, 0x08,   // report size 8
-  0x95, 0x02,   // report count 2
-  0x81, 0x00,   // input (data, array)
-
-  
-  0x05, 0x0c,   // usage page (consumer)
-  0x15, 0x00,   // logical minimum (0)
-  0x25, 0x01,   // logical maximum (1)
-  0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
   0x09, 0xe9,   // usage (Volume Increment, RTC) - BTN2
+  0x09, 0xea,   // usage (Volume Decrement, RTC) - BTN3
+  0x09, 0xe2,   // usage (volume mute, OOC) - BTN4
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x75, 0x01,   // report size (1)
-  0x95, 0x02,   // report count (2)
+  0x95, 0x03,   // report count (3)
   0x81, 0x02,   // input (data, var, absolute, preferred state)
 
+  0x09, 0x78,   // usage (camera access toggle, OOC) - BTN1
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
   0x75, 0x01,   // report size (1)
-  0x95, 0x06,   // report count (6)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+
+  0x75, 0x04,   // report size (4)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x01,   // input (const, padding)
+
+  0xc0,         // end collection
+
+  0x05, 0x0b,   // usage page (telephony)
+  0x09, 0x07,   // usage (programmable button)
+  0xA1, 0x01,   // collection (application)
+
+  0x85, 0x02,   // report id (2)
+
+  0x09, 0x2f,   // usage (Phone Mute, OOC) - BTN6
+  0x15, 0xff,   // logical minimum (-1)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x02,   // report size (2)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x26,   // input (data, var, relative, no preferred state)   
+
+  0x09, 0x2f,   // usage (phone mute, OOC) - BTN5
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x06,   // input (data, var, relative, preferred state)
+  
+  0x09, 0x21,   // usage (Flash, MC) - BTN0
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x01,   // report count (1)
+  0x81, 0x02,   // input (data, var, absolute, preferred state)
+
+  0x75, 0x04,   // report size (4)
+  0x95, 0x01,   // report count (1)
   0x81, 0x01,   // input (const, padding)
 
 
-  // 0x05, 0x08,   // usage page (Led page)
-  // 0x15, 0x00,   // logical minimum (0)
-  // 0x25, 0x01,   // logical maximum (1)
-  // 0x09, 0x09,   // usage (mute)
-  // 0x09, 0x17,   // usage (off-hook)
-  // 0x09, 0x18,   // usage (ring)
-  // 0x09, 0x20,   // usage (hold)
-  // 0x09, 0x21,   // usage (microphone)
-  // 0x75, 0x01,   // report size (1)
-  // 0x95, 0x01,   // report count (5)
-  // 0x91, 0x02,   // output (data, absolute)
+  0x05, 0x08,   // usage page (led page)
+  0x09, 0x02,   // usage (capslock) temporary, fix padding
+  0x09, 0x09,   // usage (mute) TODO check what this does, check if all these are needed
+  0x09, 0x17,   // usage (off-hook)
+  0x09, 0x18,   // usage (ring)
+  0x09, 0x1e,   // usage (speaker)
+  0x09, 0x20,   // usage (hold)
+  0x09, 0x21,   // usage (microphone)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x07,   // report count (7)
+  0x91, 0x22,   // output (data, absolute, no preffered)
 
-  // 0x75, 0x01,   // report size (1)
-  // 0x95, 0x03,   // report count (3)
-  // 0x91, 0x01,   // output (const, padding)
+  0x75, 0x01,   // report size (2)
+  0x95, 0x01,   // report count (1)
+  0x91, 0x01,   // output (const)
 
-  0xc0         // end collection
+  0xc0          // end collection
+
 };
 
 #endif

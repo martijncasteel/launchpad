@@ -19,6 +19,7 @@
 #include <avr/interrupt.h>
 
 uint8_t configuration = 0;
+uint8_t clear_report = 0;
 uint8_t idle_duration;
 
 data_t *data; // struct with din and dout
@@ -33,21 +34,21 @@ data_t *data; // struct with din and dout
  * @returns memory address for usb data
  */
 data_t* usb_init() {
-  cli();                                    // global interrrupt disabled
+  cli();                                  // global interrrupt disabled
 
-  USBCON &= ~(0x01 << USBE);                // reset USB controller
+  USBCON &= ~(0x01 << USBE);              // reset USB controller
   USBCON |= (0x01 << USBE);
 
-  USBCON &= ~(0x01 << FRZCLK);              // unfreeze the clock
+  USBCON &= ~(0x01 << FRZCLK);            // unfreeze the clock
   
-  UHWCON |= (1 << UVREGE);                  // enable USB pads regulator
-  USBCON |= (0x01 << OTGPADE) |             // enable VBUS pads
-    (0x01 << VBUSTE);                       // enable VBUS interrupt
+  UHWCON |= (1 << UVREGE);                // enable USB pads regulator
+  USBCON |= (0x01 << OTGPADE) |           // enable VBUS pads
+    (0x01 << VBUSTE);                     // enable VBUS interrupt
   
-  UDCON &= ~(1 << LSM);                     // use full speed mode
-  UDCON &= ~(1 << DETACH);                  // pull D+ high for attaching to host
+  UDCON &= ~(1 << LSM);                   // use full speed mode
+  UDCON &= ~(1 << DETACH);                // pull D+ high for attaching to host
 
-  sei();                                    // global interrupt enabled
+  sei();                                  // global interrupt enabled
 
   data = (data_t *) malloc(sizeof(data_t)); // initialize register
   memset(data, 0, sizeof(data_t));
@@ -102,7 +103,7 @@ ISR(USB_GEN_vect){
    * End of reset interupt
    */
   if (udint & (1 << EORSTI)) {
-    UDINT &= ~(1 << EORSTI);              // reset configuration version
+    UDINT &= ~(1 << EORSTI);              // reset interrupt flag
 
     UENUM = 0x00;                         // select endpoint 0
     UECONX = (1 << EPEN);                 // enable the endpoint
@@ -127,12 +128,12 @@ ISR(USB_GEN_vect){
    * Start of frame interrupt if usb is configured correctly and set configuration
    * is used to set the data endpoint.
    */
-  if (configuration && (udint & (1 << SOFI))){ 
+  if ((udint & (1 << SOFI)) && configuration ){ 
     UDINT &= ~(1 << SOFI);                // clear interrupt flag
-    UENUM = 0x01;                         // endpoint #1 for reports
+    UENUM = 0x01;                         // endpoint for launchpad reports
 
     if (UEINTX & (1 << RWAL)) {           // check if banks are writeable
-      send_dout_data(&(data->dout));
+      send_dout_data(&(data->dout));      // create report
 
       UEINTX = (1 << RWAL) | (1 << NAKOUTI) | (1 << RXSTPI) | (1 << STALLEDI);
     }
@@ -153,7 +154,7 @@ ISR(USB_GEN_vect){
  * 
  */
 ISR(USB_COM_vect) {
-  UENUM = 0; // endpoint number is 0, 0 is the default configuration endpoint
+  UENUM = 0x00; // endpoint number is 0, 0 is the default configuration endpoint
 
   // USB endpoint interrupt and setup interrupt flag, setup interrupt flag is set
   // for every message the host initiates. Setup contains requesttype, request, 
@@ -179,6 +180,7 @@ ISR(USB_COM_vect) {
     // will be cleared. received setup interrupt flag, received out data interrupt 
     // flag, ready interrupt flag
     UEINTX &= ~((1 << RXSTPI) | (1 << RXOUTI) | (1 << TXINI)); 
+
 
     /* USB device requests*/
 
@@ -310,10 +312,13 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << RXOUTI)))
         ; // wait for banks ready to read
 
-        data->din = UEDATX;
+        uint8_t _ = UEDATX;               // ignore report id
+        data->din = UEDATX;               // read bits for LED
+
+        // eunum maybe?
 
         UEINTX &= ~(1 << TXINI);
-        UEINTX &= ~(1 << RXOUTI);
+        // UEINTX &= ~(1 << RXOUTI);         // TODO check this, looks like no response, maybe wrong endpoint?
         return;
     }
 
@@ -424,17 +429,39 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
 
 /**
  * Small function to send the dout register to UEDATX, a byte at a time. 
+ * The register consists of multiple reports, every byte holds a report, 
+ * see the report descriptor for more information. 
+ * 
+ * If the second byte has data, the second byte will be cleared and the 
+ * data will be send with report id 2. Afterwards an empty report should be
+ * send to clear key presses. Otherwise only the first byte will
+ * be cleared and send with report id 1. report 1 is then also the default.
  * 
  * @param dout pointer to data register
  */
-int8_t send_dout_data(uint32_t* dout) {
-  uint32_t data = *dout;        // copy data to variable
-  *dout = (uint32_t) 0;         // clear register
+int8_t send_dout_data(uint16_t* dout) {
+  uint16_t data = *dout;
 
-  UEDATX = (data >> 24) & 255;
-  UEDATX = (data >> 16) & 255;
-  UEDATX = (data >>  8) & 255;
-  UEDATX = (data & 255);
+  if ((data & 255) > 0) {                 // second byte has data
+    *dout = (data & 0xFF00);              // clear second byte in buffer
 
-  return 0;
+    UEDATX = 0x02;
+    UEDATX = (data & 255);
+
+    clear_report = 1;                     // send an empty message afterwards
+    return 0;
+
+  } else if (clear_report) {              // note their is probably a neater way
+    UEDATX = 0x02;
+    UEDATX = 0x00;                        // clear report to stop key being 'pressed down'
+
+    clear_report = 0;
+    return 0;
+
+  } else {                                // send first byte as report 1
+    *dout = (data & 255);                 // clear first byte
+    UEDATX = 0x01;                        // report id
+    UEDATX = (data >> 8) & 255;           // send report to buffer
+    return 0;
+  }
 }

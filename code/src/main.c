@@ -25,7 +25,6 @@
 #include "board.h"
 #include "usb.h"
 
-#include <string.h>
 #include <avr/io.h>
 #include <util/delay.h>
 
@@ -37,7 +36,7 @@ int main()
   
   DDRF |= (1 << LED);           // Make pin 23 / PORTF0 be an output
 
-  data_t* data = usb_init();    // initialize usb connection
+  data_t* data = usb_init();  // initialize usb connection
   uint8_t counter = 0;          // counter to check buttons once every 50 ms
 
   while(1) {
@@ -48,7 +47,7 @@ int main()
     }
 
     // control led
-    // animate_led(data->din);
+    animate_led(&(data->din));
     
     counter++;
     _delay_ms(1); 
