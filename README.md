@@ -38,4 +38,6 @@ After creating the [assembly](https://github.com/martijncasteel/launchpad/tree/m
 ## Where I am now
 Well, the hardware went back in a drawer, I'm updating my README and that's it I guess. The buttons declared in the normal consumer control are working; volume up/down, and mute. The toggle camera is somewhat working, however teams just freezes the last frame and is not able to recover from it. More about the implementation in the [code](https://github.com/martijncasteel/launchpad/tree/main/code) directory.
 
+![Launchpad photo](https://github.com/martijncasteel/launchpad/blob/main/images/image.jpeg?raw=true)
+
 The buttons for the telephone page; mute microphone and flash are not working. The computer receives the commands fine but not actions is take by the OS or teams. It did cross my mind to implement it as a [generic keyboard](https://github.com/martijncasteel/launchpad/commit/3572334c3c04b70ffb8cd755422ddb2e0c5258f0) and use the teams shortcuts. The whole purpose was to be able to mute microsoft without having it in focus, so I scratched that idea. But it will work
