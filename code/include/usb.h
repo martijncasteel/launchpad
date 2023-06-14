@@ -84,7 +84,7 @@ int8_t send_dout_data(uint16_t* data);
 
 // defined length of configuration and report descriptor
 #define CONFIG_SIZE 34
-#define REPORT_SIZE 94
+#define REPORT_SIZE 126
 
 
 /**
@@ -198,7 +198,7 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0xc0,         // end collection
 
   0x05, 0x0b,   // usage page (telephony)
-  0x09, 0x05,   // usage (headset)
+  0x09, 0x07,   // usage (programmable button)
   0xA1, 0x01,   // collection (application)
 
   0x85, 0x02,   // report id (2)
@@ -228,23 +228,26 @@ static const uint8_t report_descriptor[] PROGMEM = {
   0x95, 0x01,   // report count (1)
   0x81, 0x01,   // input (const, padding)
 
+
+  0x05, 0x08,   // usage page (led page)
+  0x09, 0x02,   // usage (capslock) temporary, fix padding
+  0x09, 0x09,   // usage (mute) TODO check what this does, check if all these are needed
+  0x09, 0x17,   // usage (off-hook)
+  0x09, 0x18,   // usage (ring)
+  0x09, 0x1e,   // usage (speaker)
+  0x09, 0x20,   // usage (hold)
+  0x09, 0x21,   // usage (microphone)
+  0x15, 0x00,   // logical minimum (0)
+  0x25, 0x01,   // logical maximum (1)
+  0x75, 0x01,   // report size (1)
+  0x95, 0x07,   // report count (7)
+  0x91, 0x22,   // output (data, absolute, no preffered)
+
+  0x75, 0x01,   // report size (2)
+  0x95, 0x01,   // report count (1)
+  0x91, 0x01,   // output (const)
+
   0xc0          // end collection
-
-  // 0x05, 0x08,   // usage page (led page)
-  // 0x15, 0x00,   // logical minimum (0)
-  // 0x25, 0x01,   // logical maximum (1)
-  // 0x09, 0x09,   // usage (mute)
-  // 0x09, 0x17,   // usage (off-hook)
-  // 0x09, 0x18,   // usage (ring)
-  // 0x09, 0x20,   // usage (hold)
-  // 0x09, 0x21,   // usage (microphone)
-  // 0x75, 0x01,   // report size (1)
-  // 0x95, 0x01,   // report count (5)
-  // 0x91, 0x22,   // output (data, absolute, no preffered)
-
-  // 0x75, 0x03,   // report size (3)
-  // 0x95, 0x01,   // report count (1)
-  // 0x91, 0x01,   // output (const)
 
 };
 

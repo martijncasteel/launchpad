@@ -47,7 +47,7 @@ int main()
     }
 
     // control led
-    // animate_led(&(data->din));
+    animate_led(&(data->din));
     
     counter++;
     _delay_ms(1); 

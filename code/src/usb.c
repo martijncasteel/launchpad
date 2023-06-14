@@ -19,6 +19,7 @@
 #include <avr/interrupt.h>
 
 uint8_t configuration = 0;
+uint8_t clear_report = 0;
 uint8_t idle_duration;
 
 data_t *data; // struct with din and dout
@@ -311,10 +312,13 @@ ISR(USB_COM_vect) {
       while (!(UEINTX & (1 << RXOUTI)))
         ; // wait for banks ready to read
 
-        data->din = UEDATX;
+        uint8_t _ = UEDATX;               // ignore report id
+        data->din = UEDATX;               // read bits for LED
+
+        // eunum maybe?
 
         UEINTX &= ~(1 << TXINI);
-        UEINTX &= ~(1 << RXOUTI);
+        // UEINTX &= ~(1 << RXOUTI);         // TODO check this, looks like no response, maybe wrong endpoint?
         return;
     }
 
@@ -429,22 +433,30 @@ int8_t send_uint16_data(uint16_t* data, uint8_t length, uint16_t wLength) {
  * see the report descriptor for more information. 
  * 
  * If the second byte has data, the second byte will be cleared and the 
- * data will be send with report id 2. Otherwise only the first byte will
+ * data will be send with report id 2. Afterwards an empty report should be
+ * send to clear key presses. Otherwise only the first byte will
  * be cleared and send with report id 1. report 1 is then also the default.
  * 
  * @param dout pointer to data register
  */
 int8_t send_dout_data(uint16_t* dout) {
-  uint16_t data = *dout;                  // copy data to variable
+  uint16_t data = *dout;
 
   if ((data & 255) > 0) {                 // second byte has data
-    *dout = (data & 0xFF00);              // clear second byte, report 2
+    *dout = (data & 0xFF00);              // clear second byte in buffer
 
     UEDATX = 0x02;
     UEDATX = (data & 255);
+
+    clear_report = 1;                     // send an empty message afterwards
     return 0;
 
-    // TODO do I need to send an empty report afterwards?
+  } else if (clear_report) {              // note their is probably a neater way
+    UEDATX = 0x02;
+    UEDATX = 0x00;                        // clear report to stop key being 'pressed down'
+
+    clear_report = 0;
+    return 0;
 
   } else {                                // send first byte as report 1
     *dout = (data & 255);                 // clear first byte
